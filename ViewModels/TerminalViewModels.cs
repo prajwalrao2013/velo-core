@@ -188,7 +188,7 @@ public partial class ChartViewModel : ObservableObject, IRecipient<TickDataMessa
     private void GenerateMockData(string timeframe)
     {
         var candles = new ObservableCollection<FinancialPoint>();
-        var vols = new ObservableCollection<double>();
+        var vols = new ObservableCollection<ObservablePoint>();
         _ghostValues.Clear();
 
         int groupMinutes = timeframe switch {
@@ -225,7 +225,7 @@ public partial class ChartViewModel : ObservableObject, IRecipient<TickDataMessa
             double ghostY = open + (Math.Sin(i * 0.2) * 80);
             _ghostValues.Add(new FinancialPoint(group.Key, ghostY+20, ghostY-20, ghostY, ghostY));
 
-            vols.Add(vol);
+            vols.Add(new ObservablePoint(group.Key.Ticks, vol));
             i++;
         }
 
@@ -236,7 +236,7 @@ public partial class ChartViewModel : ObservableObject, IRecipient<TickDataMessa
             var mainSeries = (CandlesticksSeries<FinancialPoint>)Series[0];
             mainSeries.Values = candles;
 
-            var volSeries = (ColumnSeries<double>)VolumeSeries[0];
+            var volSeries = (ColumnSeries<ObservablePoint>)VolumeSeries[0];
             volSeries.Values = vols;
             
             if (Series.Count > 1) {
@@ -273,7 +273,7 @@ public partial class ChartViewModel : ObservableObject, IRecipient<TickDataMessa
             };
 
             VolumeSeries = new ObservableCollection<ISeries> {
-                new ColumnSeries<double> {
+                new ColumnSeries<ObservablePoint> {
                     Values = vols,
                     Fill = new SolidColorPaint(SKColor.Parse("#3F3F46"))
                 }
@@ -367,11 +367,43 @@ public partial class ChartViewModel : ObservableObject, IRecipient<TickDataMessa
                 
                 var last = coll[coll.Count - 1];
                 if (last == null) return;
+
+                int groupMinutes = SelectedTimeframe switch {
+                    "1m" => 1,
+                    "5m" => 5,
+                    "15m" => 15,
+                    "1h" => 60,
+                    "D" => 1440,
+                    _ => 5
+                };
+                var groupTicks = TimeSpan.FromMinutes(groupMinutes).Ticks;
                 
-                double high = Math.Max(last.High ?? tick.LastPrice, tick.LastPrice);
-                double low = Math.Min(last.Low ?? tick.LastPrice, tick.LastPrice);
-                
-                coll[coll.Count - 1] = new FinancialPoint(last.Date, high, last.Open ?? tick.LastPrice, tick.LastPrice, low);
+                var tickTicks = tick.Timestamp.Ticks;
+                var currentBlockStart = new DateTime(tickTicks - (tickTicks % groupTicks));
+
+                if (currentBlockStart > last.Date)
+                {
+                    // Frame advanced: Add new candle
+                    coll.Add(new FinancialPoint(currentBlockStart, tick.LastPrice, tick.LastPrice, tick.LastPrice, tick.LastPrice));
+                    if (coll.Count > 150) coll.RemoveAt(0);
+
+                    if (VolumeSeries != null && VolumeSeries.Count > 0)
+                    {
+                        var volColl = VolumeSeries[0].Values as ObservableCollection<ObservablePoint>;
+                        if (volColl != null)
+                        {
+                            volColl.Add(new ObservablePoint(currentBlockStart.Ticks, 0));
+                            if (volColl.Count > 150) volColl.RemoveAt(0);
+                        }
+                    }
+                }
+                else
+                {
+                    // Same frame: Update current candle
+                    double high = Math.Max(last.High ?? tick.LastPrice, tick.LastPrice);
+                    double low = Math.Min(last.Low ?? tick.LastPrice, tick.LastPrice);
+                    coll[coll.Count - 1] = new FinancialPoint(last.Date, high, last.Open ?? tick.LastPrice, tick.LastPrice, low);
+                }
             });
         }
     }
