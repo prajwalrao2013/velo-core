@@ -91,8 +91,11 @@ public partial class ChartViewModel : ObservableObject, IRecipient<TickDataMessa
         if (tick.Symbol == SelectedSymbol)
         {
             Dispatcher.UIThread.InvokeAsync(() => {
-                var coll = (ObservableCollection<FinancialPoint>)Series[0].Values;
+                var coll = Series[0].Values as ObservableCollection<FinancialPoint>;
+                if (coll == null || coll.Count == 0) return;
+                
                 var last = coll[coll.Count - 1];
+                if (last == null) return;
                 
                 double high = Math.Max(last.High ?? tick.LastPrice, tick.LastPrice);
                 double low = Math.Min(last.Low ?? tick.LastPrice, tick.LastPrice);
