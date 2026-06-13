@@ -214,10 +214,10 @@ public partial class ChartViewModel : ObservableObject, IRecipient<TickDataMessa
         foreach (var group in grouped)
         {
             var list = group.ToList();
-            double open = list.First().Candle.Open.Value;
-            double close = list.Last().Candle.Close.Value;
-            double high = list.Max(x => x.Candle.High).Value;
-            double low = list.Min(x => x.Candle.Low).Value;
+            double open = list.First().Candle.Open.GetValueOrDefault(0);
+            double close = list.Last().Candle.Close.GetValueOrDefault(0);
+            double high = list.Max(x => x.Candle.High).GetValueOrDefault(0);
+            double low = list.Min(x => x.Candle.Low).GetValueOrDefault(0);
             double vol = list.Sum(x => x.Volume);
 
             candles.Add(new FinancialPoint(group.Key, high, open, close, low));
@@ -513,7 +513,6 @@ public partial class PositionsViewModel : ObservableObject, IRecipient<TickDataM
     {
         WeakReferenceMessenger.Default.Register<TickDataMessage>(this, (r,m) => ((PositionsViewModel)r).Receive(m));
         WeakReferenceMessenger.Default.Register<TradeExecutedMessage>(this, (r,m) => ((PositionsViewModel)r).Receive(m));
-        OpenPositions.Add(new Position("NIFTY50", "L", 50, "21900.00", "22000.50", "+₹5,025", "+0.46%"));
     }
 
     public void Receive(TickDataMessage message)
