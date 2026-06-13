@@ -141,8 +141,8 @@ public partial class PulseWorkspaceViewModel : ObservableObject
 
 public partial class ChartViewModel : ObservableObject, IRecipient<TickDataMessage>
 {
-    public ObservableCollection<ISeries> Series { get; set; }
-    public ObservableCollection<ISeries> VolumeSeries { get; set; }
+    public ObservableCollection<ISeries> Series { get; set; } = new();
+    public ObservableCollection<ISeries> VolumeSeries { get; set; } = new();
     
     public Axis[] XAxes { get; set; }
     public Axis[] VolumeXAxes { get; set; }
@@ -155,6 +155,28 @@ public partial class ChartViewModel : ObservableObject, IRecipient<TickDataMessa
 
     private ObservableCollection<FinancialPoint> _ghostValues = new();
     private bool _isSyncing = false;
+
+    private static readonly List<(FinancialPoint Candle, double Volume)> _baselineData = GenerateBaselineData();
+
+    private static List<(FinancialPoint Candle, double Volume)> GenerateBaselineData()
+    {
+        var data = new List<(FinancialPoint, double)>();
+        double p = 22000;
+        var r = new Random(42);
+        // Generate 1-minute data for a few days
+        DateTime startTime = DateTime.Today.AddDays(-10);
+        for (int i = 0; i < 10000; i++)
+        {
+            double open = p;
+            double close = p + (r.NextDouble() - 0.5) * 15;
+            double high = Math.Max(open, close) + r.NextDouble() * 10;
+            double low = Math.Min(open, close) - r.NextDouble() * 10;
+            
+            data.Add((new FinancialPoint(startTime.AddMinutes(i), high, open, close, low), r.Next(100, 1000)));
+            p = close;
+        }
+        return data;
+    }
 
     [RelayCommand]
     private void ChangeTimeframe(string timeframe)
@@ -169,31 +191,45 @@ public partial class ChartViewModel : ObservableObject, IRecipient<TickDataMessa
         var vols = new ObservableCollection<double>();
         _ghostValues.Clear();
 
-        double p = 22000;
-        var r = new Random();
-        
-        int stepSeconds = timeframe switch {
-            "1m" => 60,
-            "5m" => 300,
-            "15m" => 900,
-            "1h" => 3600,
-            "D" => 86400,
-            _ => 300
+        int groupMinutes = timeframe switch {
+            "1m" => 1,
+            "5m" => 5,
+            "15m" => 15,
+            "1h" => 60,
+            "D" => 1440,
+            _ => 5
         };
 
-        for(int i=0; i<120; i++) {
-            double open = p;
-            double close = p + (r.NextDouble() - 0.5) * 60;
-            double high = Math.Max(open, close) + r.NextDouble() * 20;
-            double low = Math.Min(open, close) - r.NextDouble() * 20;
-            candles.Add(new FinancialPoint(DateTime.Now.AddSeconds(i * stepSeconds), high, open, close, low));
+        var grouped = _baselineData
+            .GroupBy(d => {
+                var dt = d.Candle.Date;
+                var ticks = dt.Ticks;
+                var groupTicks = TimeSpan.FromMinutes(groupMinutes).Ticks;
+                return new DateTime(ticks - (ticks % groupTicks));
+            })
+            .OrderBy(g => g.Key)
+            .TakeLast(150); // Keep last 150 candles for the view
+
+        int i = 0;
+        foreach (var group in grouped)
+        {
+            var list = group.ToList();
+            double open = list.First().Candle.Open.Value;
+            double close = list.Last().Candle.Close.Value;
+            double high = list.Max(x => x.Candle.High).Value;
+            double low = list.Min(x => x.Candle.Low).Value;
+            double vol = list.Sum(x => x.Volume);
+
+            candles.Add(new FinancialPoint(group.Key, high, open, close, low));
             
             double ghostY = open + (Math.Sin(i * 0.2) * 80);
-            _ghostValues.Add(new FinancialPoint(DateTime.Now.AddSeconds(i * stepSeconds), ghostY+20, ghostY-20, ghostY, ghostY));
+            _ghostValues.Add(new FinancialPoint(group.Key, ghostY+20, ghostY-20, ghostY, ghostY));
 
-            vols.Add(r.Next(1000, 5000));
-            p = close;
+            vols.Add(vol);
+            i++;
         }
+
+        int stepSeconds = groupMinutes * 60;
 
         if (Series != null && Series.Count > 0)
         {
