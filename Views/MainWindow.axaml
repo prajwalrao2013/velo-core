@@ -293,7 +293,7 @@
                 <TransitioningContentControl.DataTemplates>
                     <!-- TERMINAL CHART -->
                     <DataTemplate DataType="{x:Type vm:ChartViewModel}">
-                        <Grid RowDefinitions="Auto, *">
+                        <Grid RowDefinitions="Auto, *, 80">
                             <!-- Chart Toolbar -->
                             <Grid ColumnDefinitions="Auto, *, Auto" Margin="0,0,16,16">
                                 <StackPanel Orientation="Horizontal" Spacing="12">
@@ -315,33 +315,114 @@
                                 </StackPanel>
                             </Grid>
 
-                            <!-- LiveCharts2 Canvas -->
-                            <lvc:CartesianChart Grid.Row="1" Series="{Binding Series}" AnimationsSpeed="00:00:00.050"/>
+                            <!-- LiveCharts2 Canvas Main -->
+                            <lvc:CartesianChart Grid.Row="1" Series="{Binding Series}" XAxes="{Binding XAxes}" YAxes="{Binding YAxes}" AnimationsSpeed="00:00:00.050"/>
+                            
+                            <!-- LiveCharts2 Canvas Volume -->
+                            <lvc:CartesianChart Grid.Row="2" Series="{Binding VolumeSeries}" XAxes="{Binding VolumeXAxes}" YAxes="{Binding VolumeYAxes}" AnimationsSpeed="00:00:00.050" TooltipPosition="Hidden"/>
                         </Grid>
                     </DataTemplate>
 
                     <!-- ARENA IDEA BOARD -->
                     <DataTemplate DataType="{x:Type vm:ArenaWorkspaceViewModel}">
-                        <StackPanel HorizontalAlignment="Center" VerticalAlignment="Center" Spacing="16">
-                            <TextBlock Text="ARENA IDEA BOARD" FontSize="32" FontWeight="Black" Foreground="{StaticResource AccentPurpleBrush}" HorizontalAlignment="Center"/>
-                            <TextBlock Text="Collaborative trading setup and playbook sharing area." FontSize="14" Foreground="{StaticResource TextMutedBrush}" HorizontalAlignment="Center"/>
-                        </StackPanel>
+                        <ScrollViewer>
+                            <ItemsControl ItemsSource="{Binding Ideas}" Margin="32">
+                                <ItemsControl.ItemsPanel>
+                                    <ItemsPanelTemplate>
+                                        <StackPanel Spacing="16"/>
+                                    </ItemsPanelTemplate>
+                                </ItemsControl.ItemsPanel>
+                                <ItemsControl.ItemTemplate>
+                                    <DataTemplate>
+                                        <Border Background="{StaticResource Surface2Brush}" CornerRadius="8" BorderBrush="{StaticResource PanelBorderBrush}" BorderThickness="1" Padding="16">
+                                            <StackPanel Spacing="8">
+                                                <Grid ColumnDefinitions="*, Auto">
+                                                    <StackPanel Orientation="Horizontal" Spacing="8">
+                                                        <TextBlock Text="{Binding User}" FontSize="14" FontWeight="Bold" Foreground="{StaticResource TextPrimaryBrush}"/>
+                                                        <TextBlock Text="{Binding Tag}" FontSize="12" FontWeight="SemiBold" Foreground="{StaticResource AccentPurpleBrush}" VerticalAlignment="Center"/>
+                                                    </StackPanel>
+                                                    <TextBlock Grid.Column="1" Text="{Binding Pnl}" FontSize="12" FontWeight="Bold" Foreground="{StaticResource PriceUpBrush}"/>
+                                                </Grid>
+                                                <TextBlock Text="{Binding Body}" FontSize="14" Foreground="{StaticResource TextMutedBrush}" TextWrapping="Wrap"/>
+                                            </StackPanel>
+                                        </Border>
+                                    </DataTemplate>
+                                </ItemsControl.ItemTemplate>
+                            </ItemsControl>
+                        </ScrollViewer>
                     </DataTemplate>
 
                     <!-- PULSE GLOBAL MATRIX -->
                     <DataTemplate DataType="{x:Type vm:PulseWorkspaceViewModel}">
-                        <StackPanel HorizontalAlignment="Center" VerticalAlignment="Center" Spacing="16">
-                            <TextBlock Text="PULSE GLOBAL MATRIX" FontSize="32" FontWeight="Black" Foreground="{StaticResource AccentAmberBrush}" HorizontalAlignment="Center"/>
-                            <TextBlock Text="Real-time macroscopic heatmap and liquidity flow map." FontSize="14" Foreground="{StaticResource TextMutedBrush}" HorizontalAlignment="Center"/>
-                        </StackPanel>
+                        <Grid RowDefinitions="Auto, *">
+                            <!-- Fear & Greed Arc -->
+                            <Border Grid.Row="0" Margin="32" Background="{StaticResource Surface2Brush}" CornerRadius="8" BorderBrush="{StaticResource PanelBorderBrush}" BorderThickness="1" Padding="24" HorizontalAlignment="Center">
+                                <StackPanel Spacing="16" HorizontalAlignment="Center">
+                                    <TextBlock Text="FEAR &amp; GREED INDEX" FontSize="14" FontWeight="Bold" Foreground="{StaticResource TextMutedBrush}" HorizontalAlignment="Center"/>
+                                    <Grid Width="200" Height="100">
+                                        <!-- Basic Arc Implementation -->
+                                        <Path Data="M 0,100 A 100,100 0 0,1 200,100" Stroke="{StaticResource Surface3Brush}" StrokeThickness="16" Stretch="None"/>
+                                        <Path Data="M 0,100 A 100,100 0 0,1 160,20" Stroke="{StaticResource PriceUpBrush}" StrokeThickness="16" Stretch="None"/>
+                                        <TextBlock Text="62" FontSize="48" FontWeight="Black" Foreground="{StaticResource PriceUpBrush}" HorizontalAlignment="Center" VerticalAlignment="Bottom"/>
+                                    </Grid>
+                                    <TextBlock Text="GREED" FontSize="16" FontWeight="Black" Foreground="{StaticResource PriceUpBrush}" HorizontalAlignment="Center"/>
+                                </StackPanel>
+                            </Border>
+                            
+                            <!-- Global Assets UniformGrid -->
+                            <ItemsControl Grid.Row="1" ItemsSource="{Binding Assets}" Margin="32">
+                                <ItemsControl.ItemsPanel>
+                                    <ItemsPanelTemplate>
+                                        <UniformGrid Columns="3"/>
+                                    </ItemsPanelTemplate>
+                                </ItemsControl.ItemsPanel>
+                                <ItemsControl.ItemTemplate>
+                                    <DataTemplate>
+                                        <Border Background="{StaticResource Surface2Brush}" CornerRadius="8" BorderBrush="{StaticResource PanelBorderBrush}" BorderThickness="1" Padding="16" Margin="8">
+                                            <StackPanel Spacing="8" VerticalAlignment="Center">
+                                                <TextBlock Text="{Binding Name}" FontSize="14" FontWeight="Bold" Foreground="{StaticResource TextMutedBrush}"/>
+                                                <TextBlock Text="{Binding Value}" FontSize="24" FontWeight="Black" Foreground="{StaticResource TextPrimaryBrush}"/>
+                                                <TextBlock Text="{Binding Change}" FontSize="14" FontWeight="Bold">
+                                                    <TextBlock.Foreground>
+                                                        <SolidColorBrush Color="{Binding ColorHex}"/>
+                                                    </TextBlock.Foreground>
+                                                </TextBlock>
+                                            </StackPanel>
+                                        </Border>
+                                    </DataTemplate>
+                                </ItemsControl.ItemTemplate>
+                            </ItemsControl>
+                        </Grid>
                     </DataTemplate>
 
                     <!-- JOURNAL -->
                     <DataTemplate DataType="{x:Type vm:JournalWorkspaceViewModel}">
-                        <StackPanel HorizontalAlignment="Center" VerticalAlignment="Center" Spacing="16">
-                            <TextBlock Text="TRADING JOURNAL" FontSize="32" FontWeight="Black" Foreground="{StaticResource PriceUpBrush}" HorizontalAlignment="Center"/>
-                            <TextBlock Text="Automated execution logging and performance analytics." FontSize="14" Foreground="{StaticResource TextMutedBrush}" HorizontalAlignment="Center"/>
-                        </StackPanel>
+                        <ScrollViewer>
+                            <ItemsControl ItemsSource="{Binding Entries}" Margin="32">
+                                <ItemsControl.ItemsPanel>
+                                    <ItemsPanelTemplate>
+                                        <StackPanel Spacing="16"/>
+                                    </ItemsPanelTemplate>
+                                </ItemsControl.ItemsPanel>
+                                <ItemsControl.ItemTemplate>
+                                    <DataTemplate>
+                                        <Border Background="{StaticResource Surface2Brush}" CornerRadius="8" BorderBrush="{StaticResource PanelBorderBrush}" BorderThickness="1" Padding="16">
+                                            <StackPanel Spacing="8">
+                                                <Grid ColumnDefinitions="*, Auto">
+                                                    <StackPanel Orientation="Horizontal" Spacing="8">
+                                                        <TextBlock Text="{Binding Order.Symbol}" FontSize="16" FontWeight="Bold" Foreground="{StaticResource TextPrimaryBrush}"/>
+                                                        <TextBlock Text="{Binding Order.IsBuy}" FontSize="12" FontWeight="SemiBold" Foreground="{StaticResource AccentPurpleBrush}" VerticalAlignment="Center"/>
+                                                    </StackPanel>
+                                                    <TextBlock Grid.Column="1" Text="{Binding Order.Timestamp, StringFormat='{}{0:HH:mm:ss}'}" FontSize="12" Foreground="{StaticResource TextMutedBrush}"/>
+                                                </Grid>
+                                                <TextBlock Text="{Binding Notes}" FontSize="14" Foreground="{StaticResource TextPrimaryBrush}"/>
+                                                <TextBlock Text="{Binding EmotionalState}" FontSize="12" Foreground="{StaticResource AccentAmberBrush}"/>
+                                            </StackPanel>
+                                        </Border>
+                                    </DataTemplate>
+                                </ItemsControl.ItemTemplate>
+                            </ItemsControl>
+                        </ScrollViewer>
                     </DataTemplate>
                 </TransitioningContentControl.DataTemplates>
             </TransitioningContentControl>

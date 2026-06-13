@@ -1,6 +1,7 @@
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using CommunityToolkit.Mvvm.Messaging;
+using CommunityToolkit.Mvvm.Messaging.Messages;
 using System;
 using System.Collections.ObjectModel;
 using System.Linq;
@@ -18,6 +19,12 @@ using VeloTerminal.Services;
 
 namespace VeloTerminal.ViewModels;
 
+// MESSAGES
+public class TradeExecutedMessage : ValueChangedMessage<TradeOrder>
+{
+    public TradeExecutedMessage(TradeOrder value) : base(value) {}
+}
+
 public partial class MainViewModel : ObservableObject
 {
     public ChartViewModel ChartVM { get; } = new();
@@ -32,6 +39,10 @@ public partial class MainViewModel : ObservableObject
     public PsychologyViewModel PsychologyVM { get; } = new();
     public NewsTickerViewModel NewsTickerVM { get; } = new();
 
+    private ObservableObject _journalWorkspace;
+    private ObservableObject _arenaWorkspace;
+    private ObservableObject _pulseWorkspace;
+
     [ObservableProperty] private ObservableObject _currentWorkspaceView;
 
     private readonly CancellationTokenSource _cts = new();
@@ -39,6 +50,10 @@ public partial class MainViewModel : ObservableObject
     public MainViewModel()
     {
         CurrentWorkspaceView = ChartVM; // default
+        _journalWorkspace = new JournalWorkspaceViewModel();
+        _arenaWorkspace = new ArenaWorkspaceViewModel();
+        _pulseWorkspace = new PulseWorkspaceViewModel();
+
         var simulator = new MarketSimulatorService();
         simulator.StartStreaming(_cts.Token);
     }
@@ -48,28 +63,98 @@ public partial class MainViewModel : ObservableObject
     {
         CurrentWorkspaceView = workspace switch {
             "TERMINAL" => ChartVM,
-            "JOURNAL" => new JournalWorkspaceViewModel(),
-            "ARENA" => new ArenaWorkspaceViewModel(),
-            "PULSE" => new PulseWorkspaceViewModel(),
+            "JOURNAL" => _journalWorkspace,
+            "ARENA" => _arenaWorkspace,
+            "PULSE" => _pulseWorkspace,
             _ => ChartVM
         };
     }
 }
 
-public class JournalWorkspaceViewModel : ObservableObject { }
-public class ArenaWorkspaceViewModel : ObservableObject { }
-public class PulseWorkspaceViewModel : ObservableObject { }
+public partial class JournalWorkspaceViewModel : ObservableObject
+{
+    public ObservableCollection<JournalEntry> Entries { get; } = new();
+
+    public JournalWorkspaceViewModel()
+    {
+        WeakReferenceMessenger.Default.Register<TradeExecutedMessage>(this, (r, m) => ((JournalWorkspaceViewModel)r).Receive(m));
+        Entries.Add(new JournalEntry(new TradeOrder("ORD001", "NIFTY50", 50, true, 22000.50, DateTime.Now.AddMinutes(-30)), EmotionalState.Confident, "Initial breakout. Clean volume confirmation."));
+    }
+
+    public void Receive(TradeExecutedMessage message)
+    {
+        var order = message.Value;
+        Dispatcher.UIThread.InvokeAsync(() => {
+            string action = order.IsBuy ? "BUY" : "SELL";
+            Entries.Insert(0, new JournalEntry(order, EmotionalState.Neutral, $"Executed {action} {order.Qty}x @ {order.EntryPrice:N2} via Arena Engine."));
+        });
+    }
+}
+
+public class ArenaIdea
+{
+    public string User { get; set; } = "";
+    public string Tag { get; set; } = "";
+    public string Body { get; set; } = "";
+    public string Pnl { get; set; } = "";
+}
+
+public partial class ArenaWorkspaceViewModel : ObservableObject
+{
+    public ObservableCollection<ArenaIdea> Ideas { get; } = new();
+
+    public ArenaWorkspaceViewModel()
+    {
+        Ideas.Add(new ArenaIdea { User = "@TraderRex", Tag = "NIFTY · SCALP", Body = "Clean break above 22,400 supply zone. Looking for momentum continuation towards 22,500 over the next hour.", Pnl = "+1.3% P&L" });
+        Ideas.Add(new ArenaIdea { User = "@AlphaSeeker", Tag = "RELIANCE · SWING", Body = "Forming a massive multi-week cup and handle pattern. Entering half position here, will add on confirmation.", Pnl = "+0.8% P&L" });
+        Ideas.Add(new ArenaIdea { User = "@MacroBear", Tag = "BANKNIFTY · SHORT", Body = "Yields spiking again, RBI hawkish tones. Fading the morning gap up near 48,200 resistance.", Pnl = "+2.1% P&L" });
+    }
+}
+
+public class PulseAsset
+{
+    public string Name { get; set; } = "";
+    public string Value { get; set; } = "";
+    public string Change { get; set; } = "";
+    public string ColorHex { get; set; } = "#A1A1AA";
+}
+
+public partial class PulseWorkspaceViewModel : ObservableObject
+{
+    public ObservableCollection<PulseAsset> Assets { get; } = new();
+
+    public PulseWorkspaceViewModel()
+    {
+        string up = "#22C55E";
+        string down = "#EF4444";
+        Assets.Add(new PulseAsset { Name = "NIFTY50", Value = "22,388.10", Change = "+0.42%", ColorHex = up });
+        Assets.Add(new PulseAsset { Name = "S&P 500", Value = "5,123.69", Change = "+1.10%", ColorHex = up });
+        Assets.Add(new PulseAsset { Name = "NASDAQ", Value = "16,210.50", Change = "+1.40%", ColorHex = up });
+        Assets.Add(new PulseAsset { Name = "GOLD", Value = "$2,150.12", Change = "+0.20%", ColorHex = up });
+        Assets.Add(new PulseAsset { Name = "CRUDE OIL", Value = "$82.50", Change = "-1.10%", ColorHex = down });
+        Assets.Add(new PulseAsset { Name = "USD/INR", Value = "82.85", Change = "-0.05%", ColorHex = down });
+        Assets.Add(new PulseAsset { Name = "BTC", Value = "$68,400", Change = "+2.40%", ColorHex = up });
+        Assets.Add(new PulseAsset { Name = "VIX", Value = "13.20", Change = "-4.10%", ColorHex = down });
+        Assets.Add(new PulseAsset { Name = "10Y YIELD", Value = "4.05%", Change = "-0.02%", ColorHex = down });
+    }
+}
 
 public partial class ChartViewModel : ObservableObject, IRecipient<TickDataMessage>
 {
     public ObservableCollection<ISeries> Series { get; set; }
     public ObservableCollection<ISeries> VolumeSeries { get; set; }
     
+    public Axis[] XAxes { get; set; }
+    public Axis[] VolumeXAxes { get; set; }
+    public Axis[] YAxes { get; set; }
+    public Axis[] VolumeYAxes { get; set; }
+    
     [ObservableProperty] private string _selectedSymbol = "NIFTY50";
     [ObservableProperty] private string _selectedTimeframe = "5m";
     [ObservableProperty] private bool _ghostModeOn = false;
 
     private ObservableCollection<FinancialPoint> _ghostValues = new();
+    private bool _isSyncing = false;
 
     public ChartViewModel()
     {
@@ -86,8 +171,9 @@ public partial class ChartViewModel : ObservableObject, IRecipient<TickDataMessa
             double low = Math.Min(open, close) - r.NextDouble() * 20;
             candles.Add(new FinancialPoint(DateTime.Now.AddSeconds(i * 5), high, open, close, low));
             
-            // Generate historical ghost mode path
-            _ghostValues.Add(new FinancialPoint(DateTime.Now.AddSeconds(i * 5), high+200, open+200, close+200, low+200));
+            // Generate historical ghost mode path (sinusoidal offset)
+            double ghostY = open + (Math.Sin(i * 0.2) * 80);
+            _ghostValues.Add(new FinancialPoint(DateTime.Now.AddSeconds(i * 5), ghostY+20, ghostY-20, ghostY, ghostY));
 
             vols.Add(r.Next(1000, 5000));
             p = close;
@@ -110,6 +196,44 @@ public partial class ChartViewModel : ObservableObject, IRecipient<TickDataMessa
                 Fill = new SolidColorPaint(SKColor.Parse("#3F3F46"))
             }
         };
+
+        // Phase 6 Chart Axes Formatting & Sync
+        var mainX = new DateTimeAxis(TimeSpan.FromSeconds(5), date => date.ToString("HH:mm:ss"))
+        {
+            MinStep = TimeSpan.FromSeconds(30).Ticks, // Spaced out
+            TextSize = 11,
+            Padding = new LiveChartsCore.Drawing.Padding(0, 10, 0, 0),
+            LabelsPaint = new SolidColorPaint(SKColor.Parse("#A1A1AA"))
+        };
+        var volX = new DateTimeAxis(TimeSpan.FromSeconds(5), date => "")
+        {
+            IsVisible = false // Hide volume labels
+        };
+        
+        mainX.PropertyChanged += (s, e) => {
+            if (_isSyncing) return;
+            if (e.PropertyName == nameof(Axis.MinLimit) || e.PropertyName == nameof(Axis.MaxLimit)) {
+                _isSyncing = true;
+                volX.MinLimit = mainX.MinLimit;
+                volX.MaxLimit = mainX.MaxLimit;
+                _isSyncing = false;
+            }
+        };
+        volX.PropertyChanged += (s, e) => {
+            if (_isSyncing) return;
+            if (e.PropertyName == nameof(Axis.MinLimit) || e.PropertyName == nameof(Axis.MaxLimit)) {
+                _isSyncing = true;
+                mainX.MinLimit = volX.MinLimit;
+                mainX.MaxLimit = volX.MaxLimit;
+                _isSyncing = false;
+            }
+        };
+
+        XAxes = new[] { mainX };
+        VolumeXAxes = new[] { volX };
+
+        YAxes = new[] { new Axis { TextSize = 11, LabelsPaint = new SolidColorPaint(SKColor.Parse("#A1A1AA")) } };
+        VolumeYAxes = new[] { new Axis { TextSize = 9, LabelsPaint = new SolidColorPaint(SKColor.Parse("#52525B")) } };
     }
 
     partial void OnGhostModeOnChanged(bool value)
@@ -172,7 +296,7 @@ public partial class MarketWatchViewModel : ObservableObject, IRecipient<TickDat
     {
         WeakReferenceMessenger.Default.Register(this);
 
-        Instruments.Add(new Instrument("NIFTY50", "NSE · INDEX", 22000.00, 22001.00, GenerateSparkline(), 21000, 23000));
+        Instruments.Add(new Instrument("NIFTY50", "NSE · INDEX", 22000.00, 22001.00, GenerateSparkline(), 18000, 23000));
         Instruments.Add(new Instrument("BANKNIFTY", "NSE · INDEX", 48050.00, 48051.50, GenerateSparkline(), 42000, 49000));
         Instruments.Add(new Instrument("FINNIFTY", "NSE · INDEX", 21200.00, 21201.00, GenerateSparkline(), 19000, 22000));
         Instruments.Add(new Instrument("SENSEX", "BSE · INDEX", 73500.00, 73510.00, GenerateSparkline(), 65000, 75000));
@@ -225,61 +349,6 @@ public partial class MacroCalendarViewModel : ObservableObject
 }
 public record MacroEvent(string Time, string Name, string Impact, string Countdown);
 
-public partial class SeasonalityViewModel : ObservableObject
-{
-    public ObservableCollection<SeasonalityRow> Rows { get; } = new();
-    public SeasonalityViewModel()
-    {
-        var r = new Random(1);
-        for(int year = 2015; year <= 2025; year++)
-        {
-            var row = new SeasonalityRow { Year = year.ToString() };
-            for(int m=0; m<12; m++) row.Months[m] = (r.NextDouble()-0.5)*8;
-            Rows.Add(row);
-        }
-    }
-}
-public class SeasonalityRow 
-{
-    public string Year { get; set; } = "";
-    public double[] Months { get; set; } = new double[12];
-}
-
-public partial class FlowMapViewModel : ObservableObject
-{
-    public ObservableCollection<FlowSector> Sectors { get; } = new();
-    public FlowMapViewModel()
-    {
-        Sectors.Add(new FlowSector("BANK", 220, 1.4));
-        Sectors.Add(new FlowSector("IT", 180, -0.8));
-        Sectors.Add(new FlowSector("FMCG", 160, 0.5));
-        Sectors.Add(new FlowSector("ENERGY", 140, 2.1));
-        Sectors.Add(new FlowSector("PHARMA", 120, -0.2));
-        Sectors.Add(new FlowSector("REALTY", 100, 3.4));
-    }
-}
-public record FlowSector(string Name, double Size, double Return);
-
-public partial class CorrelationViewModel : ObservableObject
-{
-    public ObservableCollection<ObservableCollection<double>> Matrix { get; } = new();
-    public CorrelationViewModel()
-    {
-        double[,] data = {
-            { 1.00, 0.87, -0.12, 0.34, -0.45 },
-            { 0.87, 1.00, -0.18, 0.28, -0.50 },
-            { -0.12, -0.18, 1.00, 0.22, -0.67 },
-            { 0.34, 0.28, 0.22, 1.00, -0.31 },
-            { -0.45, -0.50, -0.67, -0.31, 1.00 }
-        };
-        for(int i=0; i<5; i++){
-            var row = new ObservableCollection<double>();
-            for(int j=0; j<5; j++) row.Add(data[i,j]);
-            Matrix.Add(row);
-        }
-    }
-}
-
 public partial class ExecutionViewModel : ObservableObject, IRecipient<TickDataMessage>
 {
     [ObservableProperty] private string _symbol = "NIFTY50";
@@ -327,7 +396,10 @@ public partial class ExecutionViewModel : ObservableObject, IRecipient<TickDataM
         IsTradeGateActive = true;
         await Task.Delay(1000);
         IsTradeGateActive = false;
-        // Proceed with simulated or real trade
+        
+        bool isBuy = action == "BUY";
+        var order = new TradeOrder(Guid.NewGuid().ToString("N").Substring(0, 8), Symbol, int.Parse(Qty), isBuy, CurrentPrice, DateTime.Now);
+        WeakReferenceMessenger.Default.Send(new TradeExecutedMessage(order));
     }
 
     public void Receive(TickDataMessage message)
@@ -350,7 +422,8 @@ public partial class PositionsViewModel : ObservableObject, IRecipient<TickDataM
     
     public PositionsViewModel()
     {
-        WeakReferenceMessenger.Default.Register(this);
+        WeakReferenceMessenger.Default.Register<TickDataMessage>(this, (r,m) => ((PositionsViewModel)r).Receive(m));
+        WeakReferenceMessenger.Default.Register<TradeExecutedMessage>(this, (r,m) => ((PositionsViewModel)r).Receive(m));
         OpenPositions.Add(new Position("NIFTY50", "L", 50, "21900.00", "22000.50", "+₹5,025", "+0.46%"));
     }
 
@@ -372,6 +445,14 @@ public partial class PositionsViewModel : ObservableObject, IRecipient<TickDataM
                 };
             });
         }
+    }
+
+    public void Receive(TradeExecutedMessage message)
+    {
+        var order = message.Value;
+        Dispatcher.UIThread.InvokeAsync(() => {
+            OpenPositions.Add(new Position(order.Symbol, order.IsBuy ? "L" : "S", order.Qty, order.EntryPrice.ToString("N2"), order.EntryPrice.ToString("N2"), "+₹0", "0.00%"));
+        });
     }
 }
 public record Position(string Symbol, string Type, int Qty, string Entry, string Ltp, string PnlAmount, string PnlPct);
@@ -424,3 +505,7 @@ public partial class NewsTickerViewModel : ObservableObject
     }
 }
 public record TickerItem(string Category, string Text);
+
+public partial class SeasonalityViewModel : ObservableObject { }
+public partial class FlowMapViewModel : ObservableObject { }
+public partial class CorrelationViewModel : ObservableObject { }
