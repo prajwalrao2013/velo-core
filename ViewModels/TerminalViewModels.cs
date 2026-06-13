@@ -524,6 +524,7 @@ public partial class PositionsViewModel : ObservableObject, IRecipient<TickDataM
         {
             Dispatcher.UIThread.InvokeAsync(() => {
                 var index = OpenPositions.IndexOf(pos);
+                if (index == -1) return; // Prevent race conditions
                 double entry = double.Parse(pos.Entry.Replace(",", ""));
                 double pnl = (tick.LastPrice - entry) * pos.Qty;
                 if (pos.Type == "SHORT") pnl = -pnl;
@@ -538,14 +539,7 @@ public partial class PositionsViewModel : ObservableObject, IRecipient<TickDataM
                     PnlColor = pnlColor
                 };
 
-                // Calculate Total
-                double total = 0;
-                foreach(var p in OpenPositions) {
-                    string amt = p.PnlAmount.Replace("+₹", "").Replace("-₹", "-").Replace(",", "");
-                    if(double.TryParse(amt, out double val)) total += val;
-                }
-                TotalPnL = (total >= 0 ? "+₹" : "-₹") + Math.Abs(total).ToString("N2");
-                TotalPnlColor = total > 0 ? "#22C55E" : (total < 0 ? "#EF4444" : "#A1A1AA");
+                RecalculateTotalPnl();
             });
         }
     }
@@ -554,11 +548,73 @@ public partial class PositionsViewModel : ObservableObject, IRecipient<TickDataM
     {
         var order = message.Value;
         Dispatcher.UIThread.InvokeAsync(() => {
-            string type = order.IsBuy ? "LONG" : "SHORT";
-            string typeBg = order.IsBuy ? "#1A22C55E" : "#1AEF4444";
-            string typeFg = order.IsBuy ? "#22C55E" : "#EF4444";
-            OpenPositions.Add(new Position(order.Symbol, type, typeBg, typeFg, order.Qty, order.EntryPrice.ToString("N2"), order.EntryPrice.ToString("N2"), "₹0.00", "0.00%", "#A1A1AA"));
+            var existingPos = OpenPositions.FirstOrDefault(p => p.Symbol == order.Symbol);
+            if (existingPos != null)
+            {
+                bool isExistingLong = existingPos.Type == "LONG";
+                if (isExistingLong != order.IsBuy)
+                {
+                    // Opposing trade
+                    if (existingPos.Qty == order.Qty)
+                    {
+                        OpenPositions.Remove(existingPos);
+                        RecalculateTotalPnl();
+                        return;
+                    }
+                    else if (order.Qty < existingPos.Qty)
+                    {
+                        int index = OpenPositions.IndexOf(existingPos);
+                        OpenPositions[index] = existingPos with { Qty = existingPos.Qty - order.Qty };
+                        return;
+                    }
+                    else
+                    {
+                        OpenPositions.Remove(existingPos);
+                        AddNewPosition(order.Symbol, order.IsBuy, order.Qty - existingPos.Qty, order.EntryPrice);
+                        RecalculateTotalPnl();
+                        return;
+                    }
+                }
+                else
+                {
+                    // Averaging same direction
+                    int index = OpenPositions.IndexOf(existingPos);
+                    OpenPositions[index] = existingPos with { Qty = existingPos.Qty + order.Qty };
+                    return;
+                }
+            }
+
+            AddNewPosition(order.Symbol, order.IsBuy, order.Qty, order.EntryPrice);
         });
+    }
+
+    private void AddNewPosition(string symbol, bool isBuy, int qty, double entryPrice)
+    {
+        string type = isBuy ? "LONG" : "SHORT";
+        string typeBg = isBuy ? "#1A22C55E" : "#1AEF4444";
+        string typeFg = isBuy ? "#22C55E" : "#EF4444";
+        OpenPositions.Add(new Position(symbol, type, typeBg, typeFg, qty, entryPrice.ToString("N2"), entryPrice.ToString("N2"), "₹0.00", "0.00%", "#A1A1AA"));
+    }
+
+    [RelayCommand]
+    private void ClosePosition(Position position)
+    {
+        if (position != null && OpenPositions.Contains(position))
+        {
+            OpenPositions.Remove(position);
+            RecalculateTotalPnl();
+        }
+    }
+
+    private void RecalculateTotalPnl()
+    {
+        double total = 0;
+        foreach(var p in OpenPositions) {
+            string amt = p.PnlAmount.Replace("+₹", "").Replace("-₹", "-").Replace(",", "");
+            if(double.TryParse(amt, out double val)) total += val;
+        }
+        TotalPnL = (total >= 0 ? "+₹" : "-₹") + Math.Abs(total).ToString("N2");
+        TotalPnlColor = total > 0 ? "#22C55E" : (total < 0 ? "#EF4444" : "#A1A1AA");
     }
 }
 public record Position(string Symbol, string Type, string TypeBgColor, string TypeFgColor, int Qty, string Entry, string Ltp, string PnlAmount, string PnlPct, string PnlColor);
