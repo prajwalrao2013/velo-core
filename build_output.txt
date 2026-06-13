@@ -1,0 +1,1 @@
+Error: [/usr/lib64/dotnet/host/fxr] does not contain any version-numbered child folders

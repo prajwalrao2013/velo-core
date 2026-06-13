@@ -1,0 +1,6 @@
+bin/
+obj/
+*.AppImage
+publish/
+.idea/
+.vscode/
