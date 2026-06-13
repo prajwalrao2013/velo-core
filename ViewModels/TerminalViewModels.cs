@@ -156,46 +156,99 @@ public partial class ChartViewModel : ObservableObject, IRecipient<TickDataMessa
     private ObservableCollection<FinancialPoint> _ghostValues = new();
     private bool _isSyncing = false;
 
-    public ChartViewModel()
+    [RelayCommand]
+    private void ChangeTimeframe(string timeframe)
     {
-        WeakReferenceMessenger.Default.Register(this);
+        SelectedTimeframe = timeframe;
+        GenerateMockData(timeframe);
+    }
 
+    private void GenerateMockData(string timeframe)
+    {
         var candles = new ObservableCollection<FinancialPoint>();
         var vols = new ObservableCollection<double>();
+        _ghostValues.Clear();
+
         double p = 22000;
-        var r = new Random(42);
+        var r = new Random();
+        
+        int stepSeconds = timeframe switch {
+            "1m" => 60,
+            "5m" => 300,
+            "15m" => 900,
+            "1h" => 3600,
+            "D" => 86400,
+            _ => 300
+        };
+
         for(int i=0; i<120; i++) {
             double open = p;
             double close = p + (r.NextDouble() - 0.5) * 60;
             double high = Math.Max(open, close) + r.NextDouble() * 20;
             double low = Math.Min(open, close) - r.NextDouble() * 20;
-            candles.Add(new FinancialPoint(DateTime.Now.AddSeconds(i * 5), high, open, close, low));
+            candles.Add(new FinancialPoint(DateTime.Now.AddSeconds(i * stepSeconds), high, open, close, low));
             
-            // Generate historical ghost mode path (sinusoidal offset)
             double ghostY = open + (Math.Sin(i * 0.2) * 80);
-            _ghostValues.Add(new FinancialPoint(DateTime.Now.AddSeconds(i * 5), ghostY+20, ghostY-20, ghostY, ghostY));
+            _ghostValues.Add(new FinancialPoint(DateTime.Now.AddSeconds(i * stepSeconds), ghostY+20, ghostY-20, ghostY, ghostY));
 
             vols.Add(r.Next(1000, 5000));
             p = close;
         }
 
-        Series = new ObservableCollection<ISeries> {
-            new CandlesticksSeries<FinancialPoint> {
-                Values = candles,
-                UpFill = new SolidColorPaint(SKColor.Parse("#22C55E")),
-                UpStroke = new SolidColorPaint(SKColor.Parse("#22C55E")) { StrokeThickness = 2 },
-                DownFill = new SolidColorPaint(SKColor.Parse("#EF4444")),
-                DownStroke = new SolidColorPaint(SKColor.Parse("#EF4444")) { StrokeThickness = 2 },
-                AnimationsSpeed = TimeSpan.FromMilliseconds(50)
-            }
-        };
+        if (Series != null && Series.Count > 0)
+        {
+            var mainSeries = (CandlesticksSeries<FinancialPoint>)Series[0];
+            mainSeries.Values = candles;
 
-        VolumeSeries = new ObservableCollection<ISeries> {
-            new ColumnSeries<double> {
-                Values = vols,
-                Fill = new SolidColorPaint(SKColor.Parse("#3F3F46"))
+            var volSeries = (ColumnSeries<double>)VolumeSeries[0];
+            volSeries.Values = vols;
+            
+            if (Series.Count > 1) {
+                Series[1].Values = _ghostValues;
             }
-        };
+            
+            if (XAxes != null && XAxes.Length > 0 && XAxes[0] is DateTimeAxis dtX)
+            {
+                dtX.UnitWidth = TimeSpan.FromSeconds(stepSeconds).Ticks;
+                dtX.MinStep = TimeSpan.FromSeconds(stepSeconds * 6).Ticks;
+                dtX.MinLimit = null;
+                dtX.MaxLimit = null;
+            }
+            
+            if (VolumeXAxes != null && VolumeXAxes.Length > 0 && VolumeXAxes[0] is DateTimeAxis vDtX)
+            {
+                vDtX.UnitWidth = TimeSpan.FromSeconds(stepSeconds).Ticks;
+                vDtX.MinStep = TimeSpan.FromSeconds(stepSeconds * 6).Ticks;
+                vDtX.MinLimit = null;
+                vDtX.MaxLimit = null;
+            }
+        }
+        else
+        {
+            Series = new ObservableCollection<ISeries> {
+                new CandlesticksSeries<FinancialPoint> {
+                    Values = candles,
+                    UpFill = new SolidColorPaint(SKColor.Parse("#22C55E")),
+                    UpStroke = new SolidColorPaint(SKColor.Parse("#22C55E")) { StrokeThickness = 2 },
+                    DownFill = new SolidColorPaint(SKColor.Parse("#EF4444")),
+                    DownStroke = new SolidColorPaint(SKColor.Parse("#EF4444")) { StrokeThickness = 2 },
+                    AnimationsSpeed = TimeSpan.FromMilliseconds(50)
+                }
+            };
+
+            VolumeSeries = new ObservableCollection<ISeries> {
+                new ColumnSeries<double> {
+                    Values = vols,
+                    Fill = new SolidColorPaint(SKColor.Parse("#3F3F46"))
+                }
+            };
+        }
+    }
+
+    public ChartViewModel()
+    {
+        WeakReferenceMessenger.Default.Register(this);
+        GenerateMockData("5m");
 
         // Phase 6 Chart Axes Formatting & Sync
         var mainX = new DateTimeAxis(TimeSpan.FromSeconds(5), date => date.ToString("HH:mm:ss"))

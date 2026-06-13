@@ -302,11 +302,11 @@
                                 </StackPanel>
                                 
                                 <StackPanel Grid.Column="1" Orientation="Horizontal" HorizontalAlignment="Center" Spacing="4">
-                                    <RadioButton Classes="TimeframePill" Content="1m"/>
-                                    <RadioButton Classes="TimeframePill" Content="5m" IsChecked="True"/>
-                                    <RadioButton Classes="TimeframePill" Content="15m"/>
-                                    <RadioButton Classes="TimeframePill" Content="1h"/>
-                                    <RadioButton Classes="TimeframePill" Content="D"/>
+                                    <RadioButton Classes="TimeframePill" Content="1m" Command="{Binding ChangeTimeframeCommand}" CommandParameter="1m"/>
+                                    <RadioButton Classes="TimeframePill" Content="5m" IsChecked="True" Command="{Binding ChangeTimeframeCommand}" CommandParameter="5m"/>
+                                    <RadioButton Classes="TimeframePill" Content="15m" Command="{Binding ChangeTimeframeCommand}" CommandParameter="15m"/>
+                                    <RadioButton Classes="TimeframePill" Content="1h" Command="{Binding ChangeTimeframeCommand}" CommandParameter="1h"/>
+                                    <RadioButton Classes="TimeframePill" Content="D" Command="{Binding ChangeTimeframeCommand}" CommandParameter="D"/>
                                 </StackPanel>
                                 
                                 <StackPanel Grid.Column="2" Orientation="Horizontal" Spacing="8">
