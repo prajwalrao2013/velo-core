@@ -507,7 +507,8 @@ public partial class ExecutionViewModel : ObservableObject, IRecipient<TickDataM
 public partial class PositionsViewModel : ObservableObject, IRecipient<TickDataMessage>
 {
     public ObservableCollection<Position> OpenPositions { get; } = new();
-    [ObservableProperty] private string _totalPnL = "+₹10,400";
+    [ObservableProperty] private string _totalPnL = "₹0.00";
+    [ObservableProperty] private string _totalPnlColor = "#A1A1AA";
     
     public PositionsViewModel()
     {
@@ -525,12 +526,26 @@ public partial class PositionsViewModel : ObservableObject, IRecipient<TickDataM
                 var index = OpenPositions.IndexOf(pos);
                 double entry = double.Parse(pos.Entry.Replace(",", ""));
                 double pnl = (tick.LastPrice - entry) * pos.Qty;
-                if (pos.Type == "S") pnl = -pnl;
+                if (pos.Type == "SHORT") pnl = -pnl;
                 
+                double pct = (pnl / (entry * pos.Qty)) * 100;
+                string pnlColor = pnl > 0 ? "#22C55E" : (pnl < 0 ? "#EF4444" : "#A1A1AA");
+
                 OpenPositions[index] = pos with { 
                     Ltp = tick.LastPrice.ToString("N2"),
-                    PnlAmount = (pnl >= 0 ? "+₹" : "-₹") + Math.Abs(pnl).ToString("N0")
+                    PnlAmount = (pnl >= 0 ? "+₹" : "-₹") + Math.Abs(pnl).ToString("N2"),
+                    PnlPct = (pnl >= 0 ? "+" : "") + pct.ToString("N2") + "%",
+                    PnlColor = pnlColor
                 };
+
+                // Calculate Total
+                double total = 0;
+                foreach(var p in OpenPositions) {
+                    string amt = p.PnlAmount.Replace("+₹", "").Replace("-₹", "-").Replace(",", "");
+                    if(double.TryParse(amt, out double val)) total += val;
+                }
+                TotalPnL = (total >= 0 ? "+₹" : "-₹") + Math.Abs(total).ToString("N2");
+                TotalPnlColor = total > 0 ? "#22C55E" : (total < 0 ? "#EF4444" : "#A1A1AA");
             });
         }
     }
@@ -539,11 +554,14 @@ public partial class PositionsViewModel : ObservableObject, IRecipient<TickDataM
     {
         var order = message.Value;
         Dispatcher.UIThread.InvokeAsync(() => {
-            OpenPositions.Add(new Position(order.Symbol, order.IsBuy ? "L" : "S", order.Qty, order.EntryPrice.ToString("N2"), order.EntryPrice.ToString("N2"), "+₹0", "0.00%"));
+            string type = order.IsBuy ? "LONG" : "SHORT";
+            string typeBg = order.IsBuy ? "#1A22C55E" : "#1AEF4444";
+            string typeFg = order.IsBuy ? "#22C55E" : "#EF4444";
+            OpenPositions.Add(new Position(order.Symbol, type, typeBg, typeFg, order.Qty, order.EntryPrice.ToString("N2"), order.EntryPrice.ToString("N2"), "₹0.00", "0.00%", "#A1A1AA"));
         });
     }
 }
-public record Position(string Symbol, string Type, int Qty, string Entry, string Ltp, string PnlAmount, string PnlPct);
+public record Position(string Symbol, string Type, string TypeBgColor, string TypeFgColor, int Qty, string Entry, string Ltp, string PnlAmount, string PnlPct, string PnlColor);
 
 public partial class PsychologyViewModel : ObservableObject
 {
