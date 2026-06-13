@@ -260,4 +260,42 @@
         </Style.Animations>
     </Style>
 
+    <Style Selector="Grid:pointerover Border.HoverDetails">
+        <Setter Property="Height" Value="30"/>
+        <Setter Property="Opacity" Value="1"/>
+    </Style>
+    <Style Selector="Border.HoverDetails">
+        <Setter Property="Transitions">
+            <Transitions>
+                <DoubleTransition Property="Height" Duration="0:0:0.2" Easing="CubicEaseOut"/>
+                <DoubleTransition Property="Opacity" Duration="0:0:0.2" Easing="CubicEaseOut"/>
+            </Transitions>
+        </Setter>
+    </Style>
+
+    <!-- Ghost Mode Toggle -->
+    <Style Selector="ToggleButton.GhostToggle">
+        <Setter Property="Background" Value="Transparent"/>
+        <Setter Property="Foreground" Value="{StaticResource TextMutedBrush}"/>
+        <Setter Property="BorderThickness" Value="1"/>
+        <Setter Property="BorderBrush" Value="{StaticResource PanelBorderBrush}"/>
+        <Setter Property="Padding" Value="12,6"/>
+        <Setter Property="CornerRadius" Value="4"/>
+        <Setter Property="Transitions">
+            <Transitions>
+                <BrushTransition Property="Background" Duration="0:0:0.2"/>
+                <BrushTransition Property="Foreground" Duration="0:0:0.2"/>
+                <BrushTransition Property="BorderBrush" Duration="0:0:0.2"/>
+                <TransformOperationsTransition Property="RenderTransform" Duration="0:0:0.2"/>
+            </Transitions>
+        </Setter>
+    </Style>
+    <Style Selector="ToggleButton.GhostToggle:pointerover">
+        <Setter Property="Background" Value="{StaticResource Surface2Brush}"/>
+    </Style>
+    <Style Selector="ToggleButton.GhostToggle:checked">
+        <Setter Property="Background" Value="#1AA855F7"/>
+        <Setter Property="Foreground" Value="{StaticResource AccentPurpleBrush}"/>
+        <Setter Property="BorderBrush" Value="{StaticResource AccentPurpleBrush}"/>
+    </Style>
 </Styles>

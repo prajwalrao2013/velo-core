@@ -37,10 +37,10 @@
 
                 <!-- Center: Nav Tabs -->
                 <StackPanel Grid.Column="1" Orientation="Horizontal" HorizontalAlignment="Center" Spacing="24" VerticalAlignment="Bottom">
-                    <RadioButton Classes="NavTab" Content="TERMINAL" IsChecked="True"/>
-                    <RadioButton Classes="NavTab" Content="JOURNAL"/>
-                    <RadioButton Classes="NavTab" Content="ANALYTICS"/>
-                    <RadioButton Classes="NavTab" Content="SETTINGS"/>
+                    <RadioButton Classes="NavTab" Content="TERMINAL" IsChecked="True" Command="{Binding SwitchWorkspaceCommand}" CommandParameter="TERMINAL"/>
+                    <RadioButton Classes="NavTab" Content="ARENA" Command="{Binding SwitchWorkspaceCommand}" CommandParameter="ARENA"/>
+                    <RadioButton Classes="NavTab" Content="PULSE" Command="{Binding SwitchWorkspaceCommand}" CommandParameter="PULSE"/>
+                    <RadioButton Classes="NavTab" Content="JOURNAL" Command="{Binding SwitchWorkspaceCommand}" CommandParameter="JOURNAL"/>
                 </StackPanel>
 
                 <!-- Right: System Info -->
@@ -66,14 +66,30 @@
                             <ItemsControl ItemsSource="{Binding Instruments}">
                                 <ItemsControl.ItemTemplate>
                                     <DataTemplate>
-                                        <Grid ColumnDefinitions="*, Auto" Margin="0,0,0,8">
+                                        <Grid Background="Transparent">
                                             <StackPanel>
-                                                <TextBlock Text="{Binding Symbol}" FontSize="13" FontWeight="SemiBold" Foreground="{StaticResource TextPrimaryBrush}"/>
-                                                <TextBlock Text="{Binding Subtext}" FontSize="10" Foreground="{StaticResource TextMutedBrush}"/>
-                                            </StackPanel>
-                                            <StackPanel Grid.Column="1" HorizontalAlignment="Right">
-                                                <TextBlock Classes="PriceFlash" Text="{Binding Bid, StringFormat='{}{0:N2}'}" FontSize="13" FontWeight="SemiBold" Foreground="{StaticResource TextPrimaryBrush}" HorizontalAlignment="Right"/>
-                                                <TextBlock Text="+0.4%" FontSize="10" Foreground="{StaticResource PriceUpBrush}" HorizontalAlignment="Right"/>
+                                                <Grid ColumnDefinitions="*, Auto" Margin="0,0,0,8">
+                                                    <StackPanel>
+                                                        <TextBlock Text="{Binding Symbol}" FontSize="13" FontWeight="SemiBold" Foreground="{StaticResource TextPrimaryBrush}"/>
+                                                        <TextBlock Text="{Binding Subtext}" FontSize="10" Foreground="{StaticResource TextMutedBrush}"/>
+                                                    </StackPanel>
+                                                    <StackPanel Grid.Column="1" HorizontalAlignment="Right">
+                                                        <TextBlock Classes="PriceFlash" Text="{Binding Bid, StringFormat='{}{0:N2}'}" FontSize="13" FontWeight="SemiBold" Foreground="{StaticResource TextPrimaryBrush}" HorizontalAlignment="Right"/>
+                                                        <TextBlock Text="+0.4%" FontSize="10" Foreground="{StaticResource PriceUpBrush}" HorizontalAlignment="Right"/>
+                                                    </StackPanel>
+                                                </Grid>
+                                                
+                                                <!-- Phase 3: Hover 52W State -->
+                                                <Border Classes="HoverDetails" Height="0" Opacity="0" ClipToBounds="True">
+                                                    <StackPanel Margin="0,0,0,8">
+                                                        <Grid ColumnDefinitions="Auto, *, Auto">
+                                                            <TextBlock Text="{Binding Low52}" FontSize="10" Foreground="{StaticResource TextMutedBrush}"/>
+                                                            <TextBlock Grid.Column="1" Text="52W RANGE" FontSize="9" HorizontalAlignment="Center" Foreground="{StaticResource TextMutedBrush}"/>
+                                                            <TextBlock Grid.Column="2" Text="{Binding High52}" FontSize="10" Foreground="{StaticResource TextMutedBrush}"/>
+                                                        </Grid>
+                                                        <ProgressBar Minimum="{Binding Low52}" Maximum="{Binding High52}" Value="{Binding Bid}" Height="4" Background="{StaticResource Surface3Brush}" Foreground="{StaticResource AccentPurpleBrush}" Margin="0,4,0,0" CornerRadius="2"/>
+                                                    </StackPanel>
+                                                </Border>
                                             </StackPanel>
                                         </Grid>
                                     </DataTemplate>
@@ -175,10 +191,10 @@
 
                             <!-- Order Type Pills -->
                             <StackPanel Orientation="Horizontal" Spacing="8">
-                                <RadioButton Classes="OrderTypePill" Content="MKT" IsChecked="True"/>
-                                <RadioButton Classes="OrderTypePill" Content="LMT"/>
-                                <RadioButton Classes="OrderTypePill" Content="SL"/>
-                                <RadioButton Classes="OrderTypePill" Content="SL-M"/>
+                                <RadioButton Classes="OrderTypePill" Content="MKT" IsChecked="{Binding IsMkt}"/>
+                                <RadioButton Classes="OrderTypePill" Content="LMT" IsChecked="{Binding IsLmt}"/>
+                                <RadioButton Classes="OrderTypePill" Content="SL" IsChecked="{Binding IsSl}"/>
+                                <RadioButton Classes="OrderTypePill" Content="SL-M" IsChecked="{Binding IsSlm}"/>
                             </StackPanel>
 
                             <!-- Inputs -->
@@ -190,10 +206,32 @@
                                 <TextBox Grid.Row="1" Grid.Column="1" Text="0.00"/>
                             </Grid>
 
+                            <!-- RR Visual Bar -->
+                            <StackPanel Spacing="4" Margin="0,8,0,0">
+                                <Grid ColumnDefinitions="*,*">
+                                    <TextBlock Text="RISK" FontSize="9" Foreground="{StaticResource TextMutedBrush}"/>
+                                    <TextBlock Grid.Column="1" Text="REWARD" FontSize="9" Foreground="{StaticResource TextMutedBrush}" HorizontalAlignment="Right"/>
+                                </Grid>
+                                <Grid Height="4" Margin="0,2,0,0">
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="{Binding RiskWidth, StringFormat='{}{0}*'}"/>
+                                        <ColumnDefinition Width="{Binding RewardWidth, StringFormat='{}{0}*'}"/>
+                                    </Grid.ColumnDefinitions>
+                                    <Border Background="{StaticResource PriceDownBrush}" CornerRadius="2,0,0,2"/>
+                                    <Border Grid.Column="1" Background="{StaticResource PriceUpBrush}" CornerRadius="0,2,2,0"/>
+                                </Grid>
+                            </StackPanel>
+
                             <!-- Action Buttons -->
-                            <Grid ColumnDefinitions="*,*">
-                                <Button Content="BUY" Background="#1A22C55E" Foreground="{StaticResource PriceUpBrush}" BorderBrush="{StaticResource PriceUpBrush}" BorderThickness="1" HorizontalAlignment="Stretch" HorizontalContentAlignment="Center" Margin="0,0,4,0"/>
-                                <Button Grid.Column="1" Content="SELL" Background="#1AEF4444" Foreground="{StaticResource PriceDownBrush}" BorderBrush="{StaticResource PriceDownBrush}" BorderThickness="1" HorizontalAlignment="Stretch" HorizontalContentAlignment="Center" Margin="4,0,0,0"/>
+                            <Grid Margin="0,8,0,0">
+                                <Grid ColumnDefinitions="*,*">
+                                    <Button Content="BUY" Command="{Binding ExecuteTradeCommand}" CommandParameter="BUY" Background="#1A22C55E" Foreground="{StaticResource PriceUpBrush}" BorderBrush="{StaticResource PriceUpBrush}" BorderThickness="1" HorizontalAlignment="Stretch" HorizontalContentAlignment="Center" Margin="0,0,4,0"/>
+                                    <Button Grid.Column="1" Content="SELL" Command="{Binding ExecuteTradeCommand}" CommandParameter="SELL" Background="#1AEF4444" Foreground="{StaticResource PriceDownBrush}" BorderBrush="{StaticResource PriceDownBrush}" BorderThickness="1" HorizontalAlignment="Stretch" HorizontalContentAlignment="Center" Margin="4,0,0,0"/>
+                                </Grid>
+                                <!-- Pre-Trade Gate -->
+                                <Border Background="{StaticResource Surface3Brush}" CornerRadius="{StaticResource PanelCornerRadius}" IsVisible="{Binding IsTradeGateActive}" HorizontalAlignment="Stretch" VerticalAlignment="Stretch">
+                                    <TextBlock Text="{Binding GateMessage}" Foreground="{StaticResource AccentAmberBrush}" FontSize="10" FontWeight="Bold" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                                </Border>
                             </Grid>
                         </StackPanel>
                     </Border>
@@ -249,34 +287,64 @@
             </ScrollViewer>
         </Border>
 
-        <!-- ZONE 3: CENTER CHART -->
-        <Border Background="{StaticResource BackgroundBrush}" Margin="16" DataContext="{Binding ChartVM}">
-            <Grid RowDefinitions="Auto, *">
-                
-                <!-- Chart Toolbar -->
-                <Grid ColumnDefinitions="Auto, *, Auto" Margin="0,0,16,16">
-                    <StackPanel Orientation="Horizontal" Spacing="12">
-                        <TextBlock Text="{Binding SelectedSymbol}" FontSize="24" FontWeight="Black" Foreground="{StaticResource TextPrimaryBrush}" VerticalAlignment="Center"/>
-                        <TextBlock Text="+124.50 (0.42%)" FontSize="14" FontWeight="SemiBold" Foreground="{StaticResource PriceUpBrush}" VerticalAlignment="Center"/>
-                    </StackPanel>
-                    
-                    <StackPanel Grid.Column="1" Orientation="Horizontal" HorizontalAlignment="Center" Spacing="4">
-                        <RadioButton Classes="TimeframePill" Content="1m"/>
-                        <RadioButton Classes="TimeframePill" Content="5m" IsChecked="True"/>
-                        <RadioButton Classes="TimeframePill" Content="15m"/>
-                        <RadioButton Classes="TimeframePill" Content="1h"/>
-                        <RadioButton Classes="TimeframePill" Content="D"/>
-                    </StackPanel>
-                    
-                    <StackPanel Grid.Column="2" Orientation="Horizontal" Spacing="8">
-                        <Button Classes="Flat" Content="Indicators"/>
-                        <Button Classes="Flat" Content="Ghost Mode"/>
-                    </StackPanel>
-                </Grid>
+        <!-- ZONE 3: CENTER CHART / WORKSPACE SWAPPER -->
+        <Border Background="{StaticResource BackgroundBrush}" Margin="16">
+            <TransitioningContentControl Content="{Binding CurrentWorkspaceView}">
+                <TransitioningContentControl.DataTemplates>
+                    <!-- TERMINAL CHART -->
+                    <DataTemplate DataType="{x:Type vm:ChartViewModel}">
+                        <Grid RowDefinitions="Auto, *">
+                            <!-- Chart Toolbar -->
+                            <Grid ColumnDefinitions="Auto, *, Auto" Margin="0,0,16,16">
+                                <StackPanel Orientation="Horizontal" Spacing="12">
+                                    <TextBlock Text="{Binding SelectedSymbol}" FontSize="24" FontWeight="Black" Foreground="{StaticResource TextPrimaryBrush}" VerticalAlignment="Center"/>
+                                    <TextBlock Text="+124.50 (0.42%)" FontSize="14" FontWeight="SemiBold" Foreground="{StaticResource PriceUpBrush}" VerticalAlignment="Center"/>
+                                </StackPanel>
+                                
+                                <StackPanel Grid.Column="1" Orientation="Horizontal" HorizontalAlignment="Center" Spacing="4">
+                                    <RadioButton Classes="TimeframePill" Content="1m"/>
+                                    <RadioButton Classes="TimeframePill" Content="5m" IsChecked="True"/>
+                                    <RadioButton Classes="TimeframePill" Content="15m"/>
+                                    <RadioButton Classes="TimeframePill" Content="1h"/>
+                                    <RadioButton Classes="TimeframePill" Content="D"/>
+                                </StackPanel>
+                                
+                                <StackPanel Grid.Column="2" Orientation="Horizontal" Spacing="8">
+                                    <Button Classes="Flat" Content="Indicators"/>
+                                    <ToggleButton Classes="GhostToggle" Content="Ghost Mode" IsChecked="{Binding GhostModeOn}"/>
+                                </StackPanel>
+                            </Grid>
 
-                <!-- LiveCharts2 Canvas -->
-                <lvc:CartesianChart Grid.Row="1" Series="{Binding Series}" AnimationsSpeed="00:00:00.150"/>
-            </Grid>
+                            <!-- LiveCharts2 Canvas -->
+                            <lvc:CartesianChart Grid.Row="1" Series="{Binding Series}" AnimationsSpeed="00:00:00.050"/>
+                        </Grid>
+                    </DataTemplate>
+
+                    <!-- ARENA IDEA BOARD -->
+                    <DataTemplate DataType="{x:Type vm:ArenaWorkspaceViewModel}">
+                        <StackPanel HorizontalAlignment="Center" VerticalAlignment="Center" Spacing="16">
+                            <TextBlock Text="ARENA IDEA BOARD" FontSize="32" FontWeight="Black" Foreground="{StaticResource AccentPurpleBrush}" HorizontalAlignment="Center"/>
+                            <TextBlock Text="Collaborative trading setup and playbook sharing area." FontSize="14" Foreground="{StaticResource TextMutedBrush}" HorizontalAlignment="Center"/>
+                        </StackPanel>
+                    </DataTemplate>
+
+                    <!-- PULSE GLOBAL MATRIX -->
+                    <DataTemplate DataType="{x:Type vm:PulseWorkspaceViewModel}">
+                        <StackPanel HorizontalAlignment="Center" VerticalAlignment="Center" Spacing="16">
+                            <TextBlock Text="PULSE GLOBAL MATRIX" FontSize="32" FontWeight="Black" Foreground="{StaticResource AccentAmberBrush}" HorizontalAlignment="Center"/>
+                            <TextBlock Text="Real-time macroscopic heatmap and liquidity flow map." FontSize="14" Foreground="{StaticResource TextMutedBrush}" HorizontalAlignment="Center"/>
+                        </StackPanel>
+                    </DataTemplate>
+
+                    <!-- JOURNAL -->
+                    <DataTemplate DataType="{x:Type vm:JournalWorkspaceViewModel}">
+                        <StackPanel HorizontalAlignment="Center" VerticalAlignment="Center" Spacing="16">
+                            <TextBlock Text="TRADING JOURNAL" FontSize="32" FontWeight="Black" Foreground="{StaticResource PriceUpBrush}" HorizontalAlignment="Center"/>
+                            <TextBlock Text="Automated execution logging and performance analytics." FontSize="14" Foreground="{StaticResource TextMutedBrush}" HorizontalAlignment="Center"/>
+                        </StackPanel>
+                    </DataTemplate>
+                </TransitioningContentControl.DataTemplates>
+            </TransitioningContentControl>
         </Border>
     </DockPanel>
 </Window>

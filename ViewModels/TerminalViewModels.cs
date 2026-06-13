@@ -1,14 +1,17 @@
 using CommunityToolkit.Mvvm.ComponentModel;
+using CommunityToolkit.Mvvm.Input;
 using CommunityToolkit.Mvvm.Messaging;
 using System;
 using System.Collections.ObjectModel;
 using System.Linq;
 using System.Threading;
+using System.Threading.Tasks;
 using Avalonia.Threading;
 using LiveChartsCore;
 using LiveChartsCore.Defaults;
 using LiveChartsCore.SkiaSharpView;
 using LiveChartsCore.SkiaSharpView.Painting;
+using LiveChartsCore.SkiaSharpView.Painting.Effects;
 using SkiaSharp;
 using VeloTerminal.Models;
 using VeloTerminal.Services;
@@ -29,14 +32,33 @@ public partial class MainViewModel : ObservableObject
     public PsychologyViewModel PsychologyVM { get; } = new();
     public NewsTickerViewModel NewsTickerVM { get; } = new();
 
+    [ObservableProperty] private ObservableObject _currentWorkspaceView;
+
     private readonly CancellationTokenSource _cts = new();
 
     public MainViewModel()
     {
+        CurrentWorkspaceView = ChartVM; // default
         var simulator = new MarketSimulatorService();
         simulator.StartStreaming(_cts.Token);
     }
+
+    [RelayCommand]
+    private void SwitchWorkspace(string workspace)
+    {
+        CurrentWorkspaceView = workspace switch {
+            "TERMINAL" => ChartVM,
+            "JOURNAL" => new JournalWorkspaceViewModel(),
+            "ARENA" => new ArenaWorkspaceViewModel(),
+            "PULSE" => new PulseWorkspaceViewModel(),
+            _ => ChartVM
+        };
+    }
 }
+
+public class JournalWorkspaceViewModel : ObservableObject { }
+public class ArenaWorkspaceViewModel : ObservableObject { }
+public class PulseWorkspaceViewModel : ObservableObject { }
 
 public partial class ChartViewModel : ObservableObject, IRecipient<TickDataMessage>
 {
@@ -44,14 +66,15 @@ public partial class ChartViewModel : ObservableObject, IRecipient<TickDataMessa
     public ObservableCollection<ISeries> VolumeSeries { get; set; }
     
     [ObservableProperty] private string _selectedSymbol = "NIFTY50";
-    [ObservableProperty] private string _selectedTimeframe = "30s";
+    [ObservableProperty] private string _selectedTimeframe = "5m";
     [ObservableProperty] private bool _ghostModeOn = false;
+
+    private ObservableCollection<FinancialPoint> _ghostValues = new();
 
     public ChartViewModel()
     {
         WeakReferenceMessenger.Default.Register(this);
 
-        // Generate mock candles
         var candles = new ObservableCollection<FinancialPoint>();
         var vols = new ObservableCollection<double>();
         double p = 22000;
@@ -62,6 +85,10 @@ public partial class ChartViewModel : ObservableObject, IRecipient<TickDataMessa
             double high = Math.Max(open, close) + r.NextDouble() * 20;
             double low = Math.Min(open, close) - r.NextDouble() * 20;
             candles.Add(new FinancialPoint(DateTime.Now.AddSeconds(i * 5), high, open, close, low));
+            
+            // Generate historical ghost mode path
+            _ghostValues.Add(new FinancialPoint(DateTime.Now.AddSeconds(i * 5), high+200, open+200, close+200, low+200));
+
             vols.Add(r.Next(1000, 5000));
             p = close;
         }
@@ -85,6 +112,37 @@ public partial class ChartViewModel : ObservableObject, IRecipient<TickDataMessa
         };
     }
 
+    partial void OnGhostModeOnChanged(bool value)
+    {
+        var mainSeries = (CandlesticksSeries<FinancialPoint>)Series[0];
+        if (value)
+        {
+            mainSeries.UpFill = new SolidColorPaint(SKColor.Parse("#6622C55E"));
+            mainSeries.UpStroke = new SolidColorPaint(SKColor.Parse("#6622C55E")) { StrokeThickness = 2 };
+            mainSeries.DownFill = new SolidColorPaint(SKColor.Parse("#66EF4444"));
+            mainSeries.DownStroke = new SolidColorPaint(SKColor.Parse("#66EF4444")) { StrokeThickness = 2 };
+
+            Series.Add(new LineSeries<FinancialPoint> {
+                Values = _ghostValues,
+                GeometryFill = null,
+                GeometryStroke = null,
+                Stroke = new SolidColorPaint(SKColor.Parse("#A855F7")) { 
+                    StrokeThickness = 2, 
+                    PathEffect = new DashEffect(new float[] { 5, 5 }) 
+                }
+            });
+        }
+        else
+        {
+            mainSeries.UpFill = new SolidColorPaint(SKColor.Parse("#22C55E"));
+            mainSeries.UpStroke = new SolidColorPaint(SKColor.Parse("#22C55E")) { StrokeThickness = 2 };
+            mainSeries.DownFill = new SolidColorPaint(SKColor.Parse("#EF4444"));
+            mainSeries.DownStroke = new SolidColorPaint(SKColor.Parse("#EF4444")) { StrokeThickness = 2 };
+
+            if (Series.Count > 1) Series.RemoveAt(1);
+        }
+    }
+
     public void Receive(TickDataMessage message)
     {
         var tick = message.Value;
@@ -100,7 +158,6 @@ public partial class ChartViewModel : ObservableObject, IRecipient<TickDataMessa
                 double high = Math.Max(last.High ?? tick.LastPrice, tick.LastPrice);
                 double low = Math.Min(last.Low ?? tick.LastPrice, tick.LastPrice);
                 
-                // Replace the point to trigger UI update in LiveCharts
                 coll[coll.Count - 1] = new FinancialPoint(last.Date, high, last.Open ?? tick.LastPrice, tick.LastPrice, low);
             });
         }
@@ -115,11 +172,11 @@ public partial class MarketWatchViewModel : ObservableObject, IRecipient<TickDat
     {
         WeakReferenceMessenger.Default.Register(this);
 
-        Instruments.Add(new Instrument("NIFTY50", "NSE · INDEX", 22000.00, 22001.00, GenerateSparkline()));
-        Instruments.Add(new Instrument("BANKNIFTY", "NSE · INDEX", 48050.00, 48051.50, GenerateSparkline()));
-        Instruments.Add(new Instrument("FINNIFTY", "NSE · INDEX", 21200.00, 21201.00, GenerateSparkline()));
-        Instruments.Add(new Instrument("SENSEX", "BSE · INDEX", 73500.00, 73510.00, GenerateSparkline()));
-        Instruments.Add(new Instrument("MIDCAP150", "NSE · INDEX", 18200.00, 18202.00, GenerateSparkline()));
+        Instruments.Add(new Instrument("NIFTY50", "NSE · INDEX", 22000.00, 22001.00, GenerateSparkline(), 21000, 23000));
+        Instruments.Add(new Instrument("BANKNIFTY", "NSE · INDEX", 48050.00, 48051.50, GenerateSparkline(), 42000, 49000));
+        Instruments.Add(new Instrument("FINNIFTY", "NSE · INDEX", 21200.00, 21201.00, GenerateSparkline(), 19000, 22000));
+        Instruments.Add(new Instrument("SENSEX", "BSE · INDEX", 73500.00, 73510.00, GenerateSparkline(), 65000, 75000));
+        Instruments.Add(new Instrument("MIDCAP150", "NSE · INDEX", 18200.00, 18202.00, GenerateSparkline(), 12000, 19000));
     }
 
     private double[] GenerateSparkline()
@@ -144,7 +201,7 @@ public partial class MarketWatchViewModel : ObservableObject, IRecipient<TickDat
         }
     }
 }
-public record Instrument(string Symbol, string Subtext, double Bid, double Ask, double[] Sparkline);
+public record Instrument(string Symbol, string Subtext, double Bid, double Ask, double[] Sparkline, double Low52, double High52);
 
 public partial class SmartMoneyViewModel : ObservableObject
 {
@@ -228,16 +285,49 @@ public partial class ExecutionViewModel : ObservableObject, IRecipient<TickDataM
     [ObservableProperty] private string _symbol = "NIFTY50";
     [ObservableProperty] private string _ltp = "22,000.50";
     [ObservableProperty] private string _change = "+0.42%";
-    [ObservableProperty] private string _orderType = "MKT";
+    
+    // Order Types
+    [ObservableProperty] private bool _isMkt = true;
+    [ObservableProperty] private bool _isLmt = false;
+    [ObservableProperty] private bool _isSl = false;
+    [ObservableProperty] private bool _isSlm = false;
+
     [ObservableProperty] private string _qty = "50";
-    [ObservableProperty] private string _stopLoss = "21950";
-    [ObservableProperty] private string _target = "22100";
+    [ObservableProperty] private double _targetPrice = 22100;
+    [ObservableProperty] private double _stopLossPrice = 21950;
+    
+    [ObservableProperty] private double _currentPrice = 22000.50;
+
     [ObservableProperty] private string _marginRequired = "₹89,556.48";
-    [ObservableProperty] private string _riskReward = "RR · 1 : 2.4";
+    
+    // Pre-Trade Gate
+    [ObservableProperty] private bool _isTradeGateActive = false;
+    [ObservableProperty] private string _gateMessage = "";
+
+    // RR Bar
+    public double RiskWidth => Math.Max(0, CurrentPrice - StopLossPrice);
+    public double RewardWidth => Math.Max(0, TargetPrice - CurrentPrice);
 
     public ExecutionViewModel()
     {
         WeakReferenceMessenger.Default.Register(this);
+        PropertyChanged += (s,e) => {
+            if (e.PropertyName == nameof(CurrentPrice) || e.PropertyName == nameof(StopLossPrice) || e.PropertyName == nameof(TargetPrice))
+            {
+                OnPropertyChanged(nameof(RiskWidth));
+                OnPropertyChanged(nameof(RewardWidth));
+            }
+        };
+    }
+
+    [RelayCommand]
+    private async Task ExecuteTradeAsync(string action)
+    {
+        GateMessage = $"CONFIRM {action} — ADHERE TO DISCIPLINE";
+        IsTradeGateActive = true;
+        await Task.Delay(1000);
+        IsTradeGateActive = false;
+        // Proceed with simulated or real trade
     }
 
     public void Receive(TickDataMessage message)
@@ -247,6 +337,7 @@ public partial class ExecutionViewModel : ObservableObject, IRecipient<TickDataM
         {
             Dispatcher.UIThread.InvokeAsync(() => {
                 Ltp = tick.LastPrice.ToString("N2");
+                CurrentPrice = tick.LastPrice;
             });
         }
     }
