@@ -31,7 +31,7 @@
                     <Border Width="1" Height="20" Background="{StaticResource PanelBorderBrush}"/>
                     <!-- Discipline Arc / Pomodoro -->
                     <StackPanel Orientation="Horizontal" Spacing="8" VerticalAlignment="Center" DataContext="{Binding PsychologyVM}">
-                        <ProgressBar Value="{Binding PomodoroProgress}" Minimum="0" Maximum="1" Width="40" Height="4" Foreground="{StaticResource PriceUpBrush}" Background="{StaticResource Surface2Brush}" VerticalAlignment="Center"/>
+                        <ProgressBar Classes="Smooth" Value="{Binding PomodoroProgress}" Minimum="0" Maximum="1" Width="40" Height="4" Foreground="{StaticResource PriceUpBrush}" Background="{StaticResource Surface2Brush}" VerticalAlignment="Center"/>
                         <TextBlock Text="{Binding PomodoroTime}" Foreground="{StaticResource PriceUpBrush}" FontSize="12" FontWeight="SemiBold" VerticalAlignment="Center"/>
                     </StackPanel>
                 </StackPanel>
@@ -61,7 +61,7 @@
                 <StackPanel Spacing="16" Margin="12">
                     
                     <!-- MarketWatch -->
-                    <Border Background="{StaticResource Surface2Brush}" CornerRadius="{StaticResource PanelCornerRadius}" BorderBrush="{StaticResource PanelBorderBrush}" BorderThickness="1" Padding="12">
+                    <Border Classes="SlideIn1" Background="{StaticResource Surface2Brush}" CornerRadius="{StaticResource PanelCornerRadius}" BorderBrush="{StaticResource PanelBorderBrush}" BorderThickness="1" Padding="12">
                         <StackPanel Spacing="12" DataContext="{Binding MarketWatchVM}">
                             <TextBlock Text="MARKET WATCH" FontSize="11" FontWeight="Bold" Foreground="{StaticResource TextMutedBrush}"/>
                             <ItemsControl ItemsSource="{Binding Instruments}">
@@ -73,7 +73,7 @@
                                                 <TextBlock Text="{Binding Subtext}" FontSize="10" Foreground="{StaticResource TextMutedBrush}"/>
                                             </StackPanel>
                                             <StackPanel Grid.Column="1" HorizontalAlignment="Right">
-                                                <TextBlock Text="{Binding Bid, StringFormat='{}{0:N2}'}" FontSize="13" FontWeight="SemiBold" Foreground="{StaticResource TextPrimaryBrush}" HorizontalAlignment="Right"/>
+                                                <TextBlock Classes="PriceFlash" Text="{Binding Bid, StringFormat='{}{0:N2}'}" FontSize="13" FontWeight="SemiBold" Foreground="{StaticResource TextPrimaryBrush}" HorizontalAlignment="Right"/>
                                                 <TextBlock Text="+0.4%" FontSize="10" Foreground="{StaticResource PriceUpBrush}" HorizontalAlignment="Right"/>
                                             </StackPanel>
                                         </Grid>
@@ -84,7 +84,7 @@
                     </Border>
 
                     <!-- Smart Money -->
-                    <Border Background="{StaticResource Surface2Brush}" CornerRadius="{StaticResource PanelCornerRadius}" BorderBrush="{StaticResource PanelBorderBrush}" BorderThickness="1" Padding="12">
+                    <Border Classes="SlideIn2" Background="{StaticResource Surface2Brush}" CornerRadius="{StaticResource PanelCornerRadius}" BorderBrush="{StaticResource PanelBorderBrush}" BorderThickness="1" Padding="12">
                         <StackPanel Spacing="12" DataContext="{Binding SmartMoneyVM}">
                             <TextBlock Text="SMART MONEY" FontSize="11" FontWeight="Bold" Foreground="{StaticResource TextMutedBrush}"/>
                             <Grid RowDefinitions="Auto,Auto,Auto" ColumnDefinitions="*,*">
@@ -111,7 +111,7 @@
                     </Border>
 
                     <!-- Macro Calendar Expander -->
-                    <Border Background="{StaticResource Surface2Brush}" CornerRadius="{StaticResource PanelCornerRadius}" BorderBrush="{StaticResource PanelBorderBrush}" BorderThickness="1" Padding="12">
+                    <Border Classes="SlideIn3" Background="{StaticResource Surface2Brush}" CornerRadius="{StaticResource PanelCornerRadius}" BorderBrush="{StaticResource PanelBorderBrush}" BorderThickness="1" Padding="12">
                         <Expander Header="MACRO CALENDAR" IsExpanded="True" DataContext="{Binding MacroCalendarVM}">
                             <ItemsControl ItemsSource="{Binding Events}">
                                 <ItemsControl.ItemTemplate>
@@ -162,14 +162,14 @@
                 <StackPanel Spacing="16" Margin="12">
                     
                     <!-- Execution Engine -->
-                    <Border Background="{StaticResource Surface2Brush}" CornerRadius="{StaticResource PanelCornerRadius}" BorderBrush="{StaticResource PanelBorderBrush}" BorderThickness="1" Padding="16">
+                    <Border Classes="SlideIn4" Background="{StaticResource Surface2Brush}" CornerRadius="{StaticResource PanelCornerRadius}" BorderBrush="{StaticResource PanelBorderBrush}" BorderThickness="1" Padding="16">
                         <StackPanel Spacing="16" DataContext="{Binding ExecutionVM}">
                             <TextBlock Text="EXECUTION ENGINE" FontSize="11" FontWeight="Bold" Foreground="{StaticResource TextMutedBrush}"/>
                             
                             <Grid ColumnDefinitions="*, Auto">
                                 <TextBlock Text="{Binding Symbol}" FontSize="20" FontWeight="Black" Foreground="{StaticResource TextPrimaryBrush}"/>
                                 <StackPanel Grid.Column="1" HorizontalAlignment="Right">
-                                    <TextBlock Text="{Binding Ltp}" FontSize="18" FontWeight="Bold" Foreground="{StaticResource PriceUpBrush}" HorizontalAlignment="Right"/>
+                                    <TextBlock Classes="PriceFlash" Text="{Binding Ltp}" FontSize="18" FontWeight="Bold" Foreground="{StaticResource PriceUpBrush}" HorizontalAlignment="Right"/>
                                     <TextBlock Text="{Binding Change}" FontSize="11" Foreground="{StaticResource PriceUpBrush}" HorizontalAlignment="Right"/>
                                 </StackPanel>
                             </Grid>
@@ -200,7 +200,7 @@
                     </Border>
 
                     <!-- Open Positions -->
-                    <Border Background="{StaticResource Surface2Brush}" CornerRadius="{StaticResource PanelCornerRadius}" BorderBrush="{StaticResource PanelBorderBrush}" BorderThickness="1" Padding="12">
+                    <Border Classes="SlideIn4" Background="{StaticResource Surface2Brush}" CornerRadius="{StaticResource PanelCornerRadius}" BorderBrush="{StaticResource PanelBorderBrush}" BorderThickness="1" Padding="12">
                         <StackPanel Spacing="12" DataContext="{Binding PositionsVM}">
                             <Grid ColumnDefinitions="*, Auto">
                                 <TextBlock Text="OPEN POSITIONS" FontSize="11" FontWeight="Bold" Foreground="{StaticResource TextMutedBrush}"/>
@@ -218,7 +218,7 @@
                                                 </StackPanel>
                                                 <TextBlock Text="{Binding Entry, StringFormat='{}Avg {0}'}" FontSize="10" Foreground="{StaticResource TextMutedBrush}"/>
                                             </StackPanel>
-                                            <TextBlock Grid.Column="1" Text="{Binding Ltp}" FontSize="13" FontWeight="Medium" Foreground="{StaticResource TextPrimaryBrush}" Margin="8,0"/>
+                                            <TextBlock Classes="PriceFlash" Grid.Column="1" Text="{Binding Ltp}" FontSize="13" FontWeight="Medium" Foreground="{StaticResource TextPrimaryBrush}" Margin="8,0"/>
                                             <StackPanel Grid.Column="2" HorizontalAlignment="Right">
                                                 <TextBlock Text="{Binding PnlAmount}" FontSize="13" FontWeight="Bold" Foreground="{StaticResource PriceUpBrush}" HorizontalAlignment="Right"/>
                                                 <TextBlock Text="{Binding PnlPct}" FontSize="10" Foreground="{StaticResource PriceUpBrush}" HorizontalAlignment="Right"/>
@@ -231,7 +231,7 @@
                     </Border>
                     
                     <!-- Psychology Engine / Habits -->
-                    <Border Background="{StaticResource Surface2Brush}" CornerRadius="{StaticResource PanelCornerRadius}" BorderBrush="{StaticResource PanelBorderBrush}" BorderThickness="1" Padding="12">
+                    <Border Classes="SlideIn4" Background="{StaticResource Surface2Brush}" CornerRadius="{StaticResource PanelCornerRadius}" BorderBrush="{StaticResource PanelBorderBrush}" BorderThickness="1" Padding="12">
                         <StackPanel Spacing="12" DataContext="{Binding PsychologyVM}">
                             <Grid ColumnDefinitions="*, Auto">
                                 <TextBlock Text="PSYCHOLOGY" FontSize="11" FontWeight="Bold" Foreground="{StaticResource TextMutedBrush}"/>
