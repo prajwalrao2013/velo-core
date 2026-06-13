@@ -51,9 +51,12 @@ public partial class MainWindowViewModel : ObservableRecipient, IRecipient<TickD
     private int _pomodoroSeconds = 25 * 60;
     private bool _isPomodoroRunning = false;
 
-    public ObservableCollection<ObservablePoint> PricePoints { get; } = new();
+    public ObservableCollection<FinancialPoint> PricePoints { get; } = new();
     public ISeries[] ChartSeries { get; set; }
     public ObservableCollection<RectangularSection> Sections { get; } = new();
+
+    private DateTime _currentCandleTime;
+    private readonly TimeSpan _candleDuration = TimeSpan.FromSeconds(5);
 
     public MainWindowViewModel()
     {
@@ -72,12 +75,13 @@ public partial class MainWindowViewModel : ObservableRecipient, IRecipient<TickD
 
         ChartSeries = new ISeries[]
         {
-            new LineSeries<ObservablePoint>
+            new CandlesticksSeries<FinancialPoint>
             {
                 Values = PricePoints,
-                Fill = null,
-                GeometrySize = 0,
-                LineSmoothness = 0
+                UpFill = new SolidColorPaint(SKColors.SpringGreen),
+                UpStroke = new SolidColorPaint(SKColors.SpringGreen) { StrokeThickness = 2 },
+                DownFill = new SolidColorPaint(SKColors.Red),
+                DownStroke = new SolidColorPaint(SKColors.Red) { StrokeThickness = 2 }
             }
         };
 
@@ -111,8 +115,20 @@ public partial class MainWindowViewModel : ObservableRecipient, IRecipient<TickD
         var tick = message.Value;
         Dispatcher.UIThread.InvokeAsync(() => {
             LatestTick = tick;
-            PricePoints.Add(new ObservablePoint(PricePoints.Count, tick.LastPrice));
-            if (PricePoints.Count > 100) PricePoints.RemoveAt(0);
+
+            if (PricePoints.Count == 0 || tick.Timestamp - _currentCandleTime >= _candleDuration)
+            {
+                _currentCandleTime = tick.Timestamp;
+                PricePoints.Add(new FinancialPoint(_currentCandleTime, tick.LastPrice, tick.LastPrice, tick.LastPrice, tick.LastPrice));
+                if (PricePoints.Count > 100) PricePoints.RemoveAt(0);
+            }
+            else
+            {
+                var lastPoint = PricePoints[PricePoints.Count - 1];
+                lastPoint.Close = tick.LastPrice;
+                if (tick.LastPrice > lastPoint.High) lastPoint.High = tick.LastPrice;
+                if (tick.LastPrice < lastPoint.Low) lastPoint.Low = tick.LastPrice;
+            }
         });
     }
 

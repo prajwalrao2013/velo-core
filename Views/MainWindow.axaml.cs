@@ -12,10 +12,6 @@ public partial class MainWindow : Window
 
     protected override void OnClosed(System.EventArgs e)
     {
-        if (DataContext is MainWindowViewModel vm)
-        {
-            vm.Shutdown();
-        }
         base.OnClosed(e);
     }
 }

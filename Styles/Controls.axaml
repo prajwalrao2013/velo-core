@@ -1,0 +1,184 @@
+<Styles xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+        
+    <!-- Custom ScrollBar -->
+    <Style Selector="ScrollBar">
+        <Setter Property="AllowAutoHide" Value="False"/>
+        <Setter Property="Width" Value="4"/>
+        <Setter Property="Background" Value="Transparent"/>
+    </Style>
+    <Style Selector="ScrollBar /template/ Thumb">
+        <Setter Property="Background" Value="{StaticResource PanelBorderBrush}"/>
+        <Setter Property="CornerRadius" Value="2"/>
+    </Style>
+    <Style Selector="ScrollBar /template/ RepeatButton">
+        <Setter Property="IsVisible" Value="False"/>
+    </Style>
+
+    <!-- Top Nav Tabs (RadioButton) -->
+    <Style Selector="RadioButton.NavTab">
+        <Setter Property="Background" Value="Transparent"/>
+        <Setter Property="BorderThickness" Value="0,0,0,2"/>
+        <Setter Property="BorderBrush" Value="Transparent"/>
+        <Setter Property="Foreground" Value="{StaticResource TextMutedBrush}"/>
+        <Setter Property="FontFamily" Value="Inter"/>
+        <Setter Property="FontSize" Value="13"/>
+        <Setter Property="FontWeight" Value="SemiBold"/>
+        <Setter Property="Padding" Value="0,0,0,8"/>
+        <Setter Property="Cursor" Value="Hand"/>
+        <Setter Property="Transitions">
+            <Transitions>
+                <BrushTransition Property="Foreground" Duration="{StaticResource FastTransition}"/>
+                <BrushTransition Property="BorderBrush" Duration="{StaticResource FastTransition}"/>
+            </Transitions>
+        </Setter>
+        <Setter Property="Template">
+            <ControlTemplate>
+                <Border Background="{TemplateBinding Background}"
+                        BorderBrush="{TemplateBinding BorderBrush}"
+                        BorderThickness="{TemplateBinding BorderThickness}"
+                        Padding="{TemplateBinding Padding}">
+                    <ContentPresenter Content="{TemplateBinding Content}"
+                                      HorizontalAlignment="Center"
+                                      VerticalAlignment="Center"/>
+                </Border>
+            </ControlTemplate>
+        </Setter>
+    </Style>
+    <Style Selector="RadioButton.NavTab:checked">
+        <Setter Property="Foreground" Value="{StaticResource TextPrimaryBrush}"/>
+        <Setter Property="BorderBrush" Value="{StaticResource PriceUpBrush}"/>
+    </Style>
+    <Style Selector="RadioButton.NavTab:pointerover">
+        <Setter Property="Foreground" Value="{StaticResource TextPrimaryBrush}"/>
+    </Style>
+
+    <!-- Timeframe Pill (RadioButton) -->
+    <Style Selector="RadioButton.TimeframePill">
+        <Setter Property="Background" Value="{StaticResource Surface2Brush}"/>
+        <Setter Property="BorderBrush" Value="{StaticResource PanelBorderBrush}"/>
+        <Setter Property="BorderThickness" Value="1"/>
+        <Setter Property="Foreground" Value="{StaticResource TextMutedBrush}"/>
+        <Setter Property="CornerRadius" Value="4"/>
+        <Setter Property="Padding" Value="8,4"/>
+        <Setter Property="Margin" Value="2,0"/>
+        <Setter Property="Cursor" Value="Hand"/>
+        <Setter Property="FontFamily" Value="Inter"/>
+        <Setter Property="FontSize" Value="12"/>
+        <Setter Property="FontWeight" Value="Medium"/>
+        <Setter Property="Transitions">
+            <Transitions>
+                <BrushTransition Property="Foreground" Duration="{StaticResource FastTransition}"/>
+                <BrushTransition Property="BorderBrush" Duration="{StaticResource FastTransition}"/>
+                <BrushTransition Property="Background" Duration="{StaticResource FastTransition}"/>
+            </Transitions>
+        </Setter>
+        <Setter Property="Template">
+            <ControlTemplate>
+                <Border Background="{TemplateBinding Background}"
+                        BorderBrush="{TemplateBinding BorderBrush}"
+                        BorderThickness="{TemplateBinding BorderThickness}"
+                        CornerRadius="{TemplateBinding CornerRadius}"
+                        Padding="{TemplateBinding Padding}">
+                    <ContentPresenter Content="{TemplateBinding Content}"
+                                      HorizontalAlignment="Center"
+                                      VerticalAlignment="Center"/>
+                </Border>
+            </ControlTemplate>
+        </Setter>
+    </Style>
+    <Style Selector="RadioButton.TimeframePill:checked">
+        <Setter Property="Foreground" Value="{StaticResource PriceUpBrush}"/>
+        <Setter Property="BorderBrush" Value="{StaticResource PriceUpBrush}"/>
+        <Setter Property="Background" Value="#1A22C55E"/>
+    </Style>
+
+    <!-- Order Type Pill (RadioButton) -->
+    <Style Selector="RadioButton.OrderTypePill">
+        <Setter Property="Background" Value="Transparent"/>
+        <Setter Property="BorderBrush" Value="Transparent"/>
+        <Setter Property="BorderThickness" Value="1"/>
+        <Setter Property="Foreground" Value="{StaticResource TextMutedBrush}"/>
+        <Setter Property="CornerRadius" Value="{StaticResource PillCornerRadius}"/>
+        <Setter Property="Padding" Value="12,6"/>
+        <Setter Property="Cursor" Value="Hand"/>
+        <Setter Property="FontFamily" Value="Inter"/>
+        <Setter Property="FontSize" Value="11"/>
+        <Setter Property="FontWeight" Value="SemiBold"/>
+        <Setter Property="Transitions">
+            <Transitions>
+                <BrushTransition Property="Foreground" Duration="{StaticResource FastTransition}"/>
+                <BrushTransition Property="Background" Duration="{StaticResource FastTransition}"/>
+                <BrushTransition Property="BorderBrush" Duration="{StaticResource FastTransition}"/>
+            </Transitions>
+        </Setter>
+        <Setter Property="Template">
+            <ControlTemplate>
+                <Border Background="{TemplateBinding Background}"
+                        BorderBrush="{TemplateBinding BorderBrush}"
+                        BorderThickness="{TemplateBinding BorderThickness}"
+                        CornerRadius="{TemplateBinding CornerRadius}"
+                        Padding="{TemplateBinding Padding}">
+                    <ContentPresenter Content="{TemplateBinding Content}"
+                                      HorizontalAlignment="Center"
+                                      VerticalAlignment="Center"/>
+                </Border>
+            </ControlTemplate>
+        </Setter>
+    </Style>
+    <Style Selector="RadioButton.OrderTypePill:checked">
+        <Setter Property="Background" Value="#2622C55E"/>
+        <Setter Property="BorderBrush" Value="{StaticResource PriceUpBrush}"/>
+        <Setter Property="Foreground" Value="{StaticResource PriceUpBrush}"/>
+    </Style>
+
+    <!-- Flat Button -->
+    <Style Selector="Button.Flat">
+        <Setter Property="Background" Value="Transparent"/>
+        <Setter Property="Foreground" Value="{StaticResource TextMutedBrush}"/>
+        <Setter Property="Padding" Value="8,4"/>
+        <Setter Property="Cursor" Value="Hand"/>
+        <Setter Property="Transitions">
+            <Transitions>
+                <BrushTransition Property="Foreground" Duration="{StaticResource FastTransition}"/>
+            </Transitions>
+        </Setter>
+    </Style>
+    <Style Selector="Button.Flat:pointerover /template/ ContentPresenter#PART_ContentPresenter">
+        <Setter Property="Background" Value="Transparent"/>
+        <Setter Property="Foreground" Value="{StaticResource TextPrimaryBrush}"/>
+    </Style>
+
+    <!-- DataGrid overrides -->
+    <Style Selector="DataGrid">
+        <Setter Property="Background" Value="{StaticResource SurfaceBrush}"/>
+        <Setter Property="RowBackground" Value="{StaticResource SurfaceBrush}"/>
+        <Setter Property="BorderThickness" Value="0"/>
+        <Setter Property="HeadersVisibility" Value="Column"/>
+    </Style>
+    <Style Selector="DataGridColumnHeader">
+        <Setter Property="Background" Value="{StaticResource SurfaceBrush}"/>
+        <Setter Property="Foreground" Value="#52525B"/>
+        <Setter Property="FontFamily" Value="Inter"/>
+        <Setter Property="FontSize" Value="9"/>
+        <Setter Property="FontWeight" Value="Bold"/>
+        <Setter Property="SeparatorBrush" Value="{StaticResource PanelBorderBrush}"/>
+    </Style>
+    <Style Selector="DataGridCell">
+        <Setter Property="FontSize" Value="12"/>
+        <Setter Property="FontFamily" Value="Inter"/>
+    </Style>
+
+    <!-- Expander Modernization -->
+    <Style Selector="Expander">
+        <Setter Property="Background" Value="Transparent"/>
+        <Setter Property="BorderThickness" Value="0"/>
+        <Setter Property="Padding" Value="0"/>
+        <Setter Property="Margin" Value="0,0,0,16"/>
+    </Style>
+    <Style Selector="Expander /template/ ToggleButton#ExpanderHeader">
+        <Setter Property="Background" Value="Transparent"/>
+        <Setter Property="Padding" Value="0,0,0,8"/>
+    </Style>
+
+</Styles>

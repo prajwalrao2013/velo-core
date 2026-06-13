@@ -1,157 +1,283 @@
 <Window xmlns="https://github.com/avaloniaui"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:vm="using:VeloTerminal.ViewModels"
-        xmlns:views="using:VeloTerminal.Views"
-        xmlns:lvc="using:LiveChartsCore.SkiaSharpView.Avalonia"
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
-        mc:Ignorable="d" d:DesignWidth="1200" d:DesignHeight="800"
+        xmlns:lvc="using:LiveChartsCore.SkiaSharpView.Avalonia"
+        mc:Ignorable="d" d:DesignWidth="1920" d:DesignHeight="1080"
         x:Class="VeloTerminal.Views.MainWindow"
-        x:DataType="vm:MainWindowViewModel"
+        x:DataType="vm:MainViewModel"
+        Icon="/Assets/avalonia-logo.ico"
         Title="Velo Terminal"
-        Background="Transparent"
-        TransparencyLevelHint="AcrylicBlur"
-        ExtendClientAreaToDecorationsHint="True"
-        WindowStartupLocation="CenterScreen">
+        Background="{StaticResource BackgroundBrush}"
+        Foreground="{StaticResource TextPrimaryBrush}"
+        FontFamily="Inter">
 
-    <Window.KeyBindings>
-        <KeyBinding Gesture="F1" Command="{Binding ScalperVM.BuyCommand}" />
-        <KeyBinding Gesture="F2" Command="{Binding ScalperVM.SellCommand}" />
-    </Window.KeyBindings>
+    <Design.DataContext>
+        <vm:MainViewModel/>
+    </Design.DataContext>
 
-    <Panel>
-        <ExperimentalAcrylicBorder IsHitTestVisible="False">
-            <ExperimentalAcrylicBorder.Material>
-                <ExperimentalAcrylicMaterial BackgroundSource="Digger" TintColor="#0a0a0f" TintOpacity="0.9" MaterialOpacity="0.6" />
-            </ExperimentalAcrylicBorder.Material>
-        </ExperimentalAcrylicBorder>
-
-        <DockPanel Margin="0,35,0,0">
-            <!-- Global Navigation Bar -->
-            <Border DockPanel.Dock="Top" Background="#1AFFFFFF" Padding="20,12" BorderBrush="#33FFFFFF" BorderThickness="0,0,0,1">
-                <Grid ColumnDefinitions="*, Auto">
-                    <StackPanel Orientation="Horizontal" Spacing="12">
-                        <TextBlock Text="VELO" FontWeight="Black" Foreground="White" FontSize="20" VerticalAlignment="Center" LetterSpacing="2"/>
-                        <Border Background="#6366F1" CornerRadius="4" Padding="6,2">
-                            <TextBlock Text="PRO" FontWeight="Bold" Foreground="White" FontSize="11" VerticalAlignment="Center"/>
-                        </Border>
+    <DockPanel>
+        <!-- ZONE 1: TOP BAR -->
+        <Border DockPanel.Dock="Top" Height="48" 
+                Background="{StaticResource SurfaceBrush}" 
+                BorderBrush="{StaticResource PanelBorderBrush}" 
+                BorderThickness="0,0,0,1"
+                Padding="16,0">
+            <Grid ColumnDefinitions="Auto, *, Auto">
+                <!-- Left: Logo & Psychology -->
+                <StackPanel Orientation="Horizontal" Spacing="16" VerticalAlignment="Center">
+                    <TextBlock Text="VELO" FontFamily="Inter" FontWeight="Black" FontSize="18" Foreground="{StaticResource TextPrimaryBrush}" VerticalAlignment="Center"/>
+                    <Border Width="1" Height="20" Background="{StaticResource PanelBorderBrush}"/>
+                    <!-- Discipline Arc / Pomodoro -->
+                    <StackPanel Orientation="Horizontal" Spacing="8" VerticalAlignment="Center" DataContext="{Binding PsychologyVM}">
+                        <ProgressBar Value="{Binding PomodoroProgress}" Minimum="0" Maximum="1" Width="40" Height="4" Foreground="{StaticResource PriceUpBrush}" Background="{StaticResource Surface2Brush}" VerticalAlignment="Center"/>
+                        <TextBlock Text="{Binding PomodoroTime}" Foreground="{StaticResource PriceUpBrush}" FontSize="12" FontWeight="SemiBold" VerticalAlignment="Center"/>
                     </StackPanel>
+                </StackPanel>
+
+                <!-- Center: Nav Tabs -->
+                <StackPanel Grid.Column="1" Orientation="Horizontal" HorizontalAlignment="Center" Spacing="24" VerticalAlignment="Bottom">
+                    <RadioButton Classes="NavTab" Content="TERMINAL" IsChecked="True"/>
+                    <RadioButton Classes="NavTab" Content="JOURNAL"/>
+                    <RadioButton Classes="NavTab" Content="ANALYTICS"/>
+                    <RadioButton Classes="NavTab" Content="SETTINGS"/>
+                </StackPanel>
+
+                <!-- Right: System Info -->
+                <StackPanel Grid.Column="2" Orientation="Horizontal" Spacing="16" VerticalAlignment="Center">
+                    <TextBlock Text="Live · NseCM" Foreground="{StaticResource PriceUpBrush}" FontSize="11" FontWeight="SemiBold"/>
+                    <TextBlock Text="14:32:05" Foreground="{StaticResource TextMutedBrush}" FontSize="11" FontWeight="Medium"/>
+                </StackPanel>
+            </Grid>
+        </Border>
+
+        <!-- ZONE 2: LEFT DOCK -->
+        <Border DockPanel.Dock="Left" Width="320" 
+                Background="{StaticResource SurfaceBrush}" 
+                BorderBrush="{StaticResource PanelBorderBrush}" 
+                BorderThickness="0,0,1,0">
+            <ScrollViewer>
+                <StackPanel Spacing="16" Margin="12">
                     
-                    <StackPanel Grid.Column="1" Orientation="Horizontal" Spacing="12" VerticalAlignment="Center">
-                        <TextBlock Text="Discipline Score:" Foreground="#A0AEC0" VerticalAlignment="Center" FontSize="14" FontWeight="SemiBold"/>
-                        <TextBlock Text="{Binding DisciplineScore}" FontWeight="Bold" FontSize="18" Foreground="#10B981" VerticalAlignment="Center"/>
-                        <Border Background="#EF4444" CornerRadius="4" Padding="6,2" IsVisible="{Binding IsScoreCritical}" Margin="8,0,0,0">
-                            <TextBlock Text="CRITICAL TILT" Foreground="White" FontWeight="Bold" FontSize="11" VerticalAlignment="Center"/>
-                        </Border>
-                    </StackPanel>
-                </Grid>
-            </Border>
-
-            <TabControl Background="Transparent" Margin="0,10,0,0">
-                <!-- Apply modern padding to tabs but leave default logic active -->
-                <TabItem Header="TERMINAL" FontSize="14" FontWeight="SemiBold">
-                    <Grid ColumnDefinitions="320, *, 340" RowDefinitions="*, Auto" Margin="12,12,12,0">
-                        
-                        <!-- Left: Marketwatch -->
-                        <ExperimentalAcrylicBorder Grid.Column="0" Margin="8" CornerRadius="12">
-                            <ExperimentalAcrylicBorder.Material>
-                                <ExperimentalAcrylicMaterial BackgroundSource="Digger" TintColor="#1A1A24" TintOpacity="0.8" MaterialOpacity="0.8" />
-                            </ExperimentalAcrylicBorder.Material>
-                            <StackPanel Margin="16">
-                                <TextBlock Text="MARKETWATCH" FontWeight="Bold" FontSize="14" Foreground="#E2E8F0" LetterSpacing="1"/>
-                                <Separator Margin="0,12" Background="#33FFFFFF"/>
-                                
-                                <Grid ColumnDefinitions="*,*,*">
-                                    <TextBlock Text="SYMBOL" Foreground="#718096" FontSize="11" FontWeight="Bold"/>
-                                    <TextBlock Grid.Column="1" Text="BID" Foreground="#718096" FontSize="11" FontWeight="Bold" TextAlignment="Right"/>
-                                    <TextBlock Grid.Column="2" Text="ASK" Foreground="#718096" FontSize="11" FontWeight="Bold" TextAlignment="Right"/>
-                                </Grid>
-                                <Grid ColumnDefinitions="*,*,*" Margin="0,12,0,0">
-                                    <TextBlock Text="{Binding LatestTick.Symbol}" FontWeight="Bold" Foreground="White" FontSize="15"/>
-                                    <TextBlock Grid.Column="1" Text="{Binding LatestTick.Bid}" Foreground="#F87171" FontWeight="SemiBold" FontSize="15" TextAlignment="Right"/>
-                                    <TextBlock Grid.Column="2" Text="{Binding LatestTick.Ask}" Foreground="#34D399" FontWeight="SemiBold" FontSize="15" TextAlignment="Right"/>
-                                </Grid>
-                            </StackPanel>
-                        </ExperimentalAcrylicBorder>
-
-                        <!-- Center: Chart & Positions -->
-                        <Grid Grid.Column="1" RowDefinitions="3*, 1*" Margin="0,8">
-                            <ExperimentalAcrylicBorder CornerRadius="12">
-                                <ExperimentalAcrylicBorder.Material>
-                                    <ExperimentalAcrylicMaterial BackgroundSource="Digger" TintColor="#1A1A24" TintOpacity="0.8" MaterialOpacity="0.8" />
-                                </ExperimentalAcrylicBorder.Material>
-                                <!-- LiveCharts Area -->
-                                <lvc:CartesianChart Series="{Binding ChartSeries}" Sections="{Binding Sections}" Margin="12"/>
-                            </ExperimentalAcrylicBorder>
-
-                            <ExperimentalAcrylicBorder Grid.Row="1" Margin="0,16,0,0" CornerRadius="12">
-                                <ExperimentalAcrylicBorder.Material>
-                                    <ExperimentalAcrylicMaterial BackgroundSource="Digger" TintColor="#1A1A24" TintOpacity="0.8" MaterialOpacity="0.8" />
-                                </ExperimentalAcrylicBorder.Material>
-                                <TextBlock Text="ACTIVE POSITIONS" Foreground="#4A5568" FontWeight="Bold" LetterSpacing="2" VerticalAlignment="Center" HorizontalAlignment="Center"/>
-                            </ExperimentalAcrylicBorder>
-                        </Grid>
-
-                        <!-- Right: Execution & Psychology -->
-                        <ExperimentalAcrylicBorder Grid.Column="2" Margin="8" CornerRadius="12">
-                            <ExperimentalAcrylicBorder.Material>
-                                <ExperimentalAcrylicMaterial BackgroundSource="Digger" TintColor="#1A1A24" TintOpacity="0.8" MaterialOpacity="0.8" />
-                            </ExperimentalAcrylicBorder.Material>
-                            
-                            <StackPanel Spacing="24" Margin="16">
-                                <!-- Isolated Custom UI -->
-                                <views:ScalperView DataContext="{Binding ScalperVM}" />
-
-                                <Separator Background="#33FFFFFF"/>
-
-                                <!-- Psychology Panel -->
-                                <StackPanel Spacing="12">
-                                    <TextBlock Text="PSYCHOLOGY ENGINE" FontWeight="Bold" FontSize="14" Foreground="#E2E8F0" LetterSpacing="1"/>
-                                    
-                                    <Border Background="#33F59E0B" CornerRadius="8" Padding="12" IsVisible="{Binding IsTiltWarningActive}" BorderBrush="#F59E0B" BorderThickness="1">
-                                        <TextBlock Text="{Binding TiltWarningText}" Foreground="#FCD34D" FontSize="13" TextWrapping="Wrap"/>
-                                    </Border>
-                                    
-                                    <Grid ColumnDefinitions="*, Auto" Margin="0,8,0,0">
-                                        <TextBlock Text="Pomodoro Focus:" VerticalAlignment="Center" Foreground="#A0AEC0" FontSize="14"/>
-                                        <Border Grid.Column="1" Background="#336366F1" CornerRadius="6" Padding="8,4">
-                                            <TextBlock Text="{Binding PomodoroText}" FontSize="18" FontWeight="Bold" Foreground="#818CF8" HorizontalAlignment="Right"/>
-                                        </Border>
-                                    </Grid>
-                                </StackPanel>
-                            </StackPanel>
-                        </ExperimentalAcrylicBorder>
-
-                        <!-- Bottom: Ticker -->
-                        <Border Grid.Row="1" Grid.ColumnSpan="3" Background="#0A0A0F" Padding="16,8" Margin="8,16,8,8" CornerRadius="8">
-                            <ItemsControl ItemsSource="{Binding Events}">
-                                <ItemsControl.ItemsPanel>
-                                    <ItemsPanelTemplate>
-                                        <StackPanel Orientation="Horizontal" Spacing="24"/>
-                                    </ItemsPanelTemplate>
-                                </ItemsControl.ItemsPanel>
+                    <!-- MarketWatch -->
+                    <Border Background="{StaticResource Surface2Brush}" CornerRadius="{StaticResource PanelCornerRadius}" BorderBrush="{StaticResource PanelBorderBrush}" BorderThickness="1" Padding="12">
+                        <StackPanel Spacing="12" DataContext="{Binding MarketWatchVM}">
+                            <TextBlock Text="MARKET WATCH" FontSize="11" FontWeight="Bold" Foreground="{StaticResource TextMutedBrush}"/>
+                            <ItemsControl ItemsSource="{Binding Instruments}">
                                 <ItemsControl.ItemTemplate>
                                     <DataTemplate>
-                                        <StackPanel Orientation="Horizontal" Spacing="8">
-                                            <TextBlock Text="⚡" Foreground="#F59E0B" VerticalAlignment="Center" FontSize="12"/>
-                                            <TextBlock Text="{Binding Headline}" Foreground="#E2E8F0" FontSize="13" VerticalAlignment="Center"/>
-                                        </StackPanel>
+                                        <Grid ColumnDefinitions="*, Auto" Margin="0,0,0,8">
+                                            <StackPanel>
+                                                <TextBlock Text="{Binding Symbol}" FontSize="13" FontWeight="SemiBold" Foreground="{StaticResource TextPrimaryBrush}"/>
+                                                <TextBlock Text="{Binding Subtext}" FontSize="10" Foreground="{StaticResource TextMutedBrush}"/>
+                                            </StackPanel>
+                                            <StackPanel Grid.Column="1" HorizontalAlignment="Right">
+                                                <TextBlock Text="{Binding Bid, StringFormat='{}{0:N2}'}" FontSize="13" FontWeight="SemiBold" Foreground="{StaticResource TextPrimaryBrush}" HorizontalAlignment="Right"/>
+                                                <TextBlock Text="+0.4%" FontSize="10" Foreground="{StaticResource PriceUpBrush}" HorizontalAlignment="Right"/>
+                                            </StackPanel>
+                                        </Grid>
                                     </DataTemplate>
                                 </ItemsControl.ItemTemplate>
                             </ItemsControl>
-                        </Border>
-                    </Grid>
-                </TabItem>
-                
-                <TabItem Header="JOURNAL" FontSize="14" FontWeight="SemiBold">
-                    <views:JournalView DataContext="{Binding JournalVM}" />
-                </TabItem>
+                        </StackPanel>
+                    </Border>
 
-                <TabItem Header="ANALYTICS" FontSize="14" FontWeight="SemiBold">
-                    <views:AnalyticsView DataContext="{Binding AnalyticsVM}" />
-                </TabItem>
+                    <!-- Smart Money -->
+                    <Border Background="{StaticResource Surface2Brush}" CornerRadius="{StaticResource PanelCornerRadius}" BorderBrush="{StaticResource PanelBorderBrush}" BorderThickness="1" Padding="12">
+                        <StackPanel Spacing="12" DataContext="{Binding SmartMoneyVM}">
+                            <TextBlock Text="SMART MONEY" FontSize="11" FontWeight="Bold" Foreground="{StaticResource TextMutedBrush}"/>
+                            <Grid RowDefinitions="Auto,Auto,Auto" ColumnDefinitions="*,*">
+                                <!-- Row 0 -->
+                                <StackPanel Grid.Row="0" Grid.Column="0" Margin="0,0,0,8">
+                                    <TextBlock Text="FII NET" FontSize="10" Foreground="{StaticResource TextMutedBrush}"/>
+                                    <TextBlock Text="{Binding FiiNet}" FontSize="12" FontWeight="SemiBold" Foreground="{StaticResource PriceUpBrush}"/>
+                                </StackPanel>
+                                <StackPanel Grid.Row="0" Grid.Column="1" Margin="0,0,0,8">
+                                    <TextBlock Text="DII NET" FontSize="10" Foreground="{StaticResource TextMutedBrush}"/>
+                                    <TextBlock Text="{Binding DiiNet}" FontSize="12" FontWeight="SemiBold" Foreground="{StaticResource PriceDownBrush}"/>
+                                </StackPanel>
+                                <!-- Row 1 -->
+                                <StackPanel Grid.Row="1" Grid.Column="0" Margin="0,0,0,8">
+                                    <TextBlock Text="MAX PAIN" FontSize="10" Foreground="{StaticResource TextMutedBrush}"/>
+                                    <TextBlock Text="{Binding MaxPain}" FontSize="12" FontWeight="SemiBold" Foreground="{StaticResource TextPrimaryBrush}"/>
+                                </StackPanel>
+                                <StackPanel Grid.Row="1" Grid.Column="1" Margin="0,0,0,8">
+                                    <TextBlock Text="PCR" FontSize="10" Foreground="{StaticResource TextMutedBrush}"/>
+                                    <TextBlock Text="{Binding Pcr}" FontSize="12" FontWeight="SemiBold" Foreground="{StaticResource TextPrimaryBrush}"/>
+                                </StackPanel>
+                            </Grid>
+                        </StackPanel>
+                    </Border>
+
+                    <!-- Macro Calendar Expander -->
+                    <Border Background="{StaticResource Surface2Brush}" CornerRadius="{StaticResource PanelCornerRadius}" BorderBrush="{StaticResource PanelBorderBrush}" BorderThickness="1" Padding="12">
+                        <Expander Header="MACRO CALENDAR" IsExpanded="True" DataContext="{Binding MacroCalendarVM}">
+                            <ItemsControl ItemsSource="{Binding Events}">
+                                <ItemsControl.ItemTemplate>
+                                    <DataTemplate>
+                                        <Grid ColumnDefinitions="Auto, *, Auto" Margin="0,0,0,8">
+                                            <TextBlock Text="{Binding Time}" FontSize="11" Foreground="{StaticResource TextMutedBrush}" Width="40"/>
+                                            <TextBlock Grid.Column="1" Text="{Binding Name}" FontSize="12" FontWeight="Medium" Foreground="{StaticResource TextPrimaryBrush}"/>
+                                            <TextBlock Grid.Column="2" Text="{Binding Impact}" FontSize="10" FontWeight="Bold" Foreground="{StaticResource AccentAmberBrush}"/>
+                                        </Grid>
+                                    </DataTemplate>
+                                </ItemsControl.ItemTemplate>
+                            </ItemsControl>
+                        </Expander>
+                    </Border>
+
+                </StackPanel>
+            </ScrollViewer>
+        </Border>
+
+        <!-- ZONE 4: BOTTOM NEWS TICKER -->
+        <Border DockPanel.Dock="Bottom" Height="32" 
+                Background="{StaticResource SurfaceBrush}" 
+                BorderBrush="{StaticResource PanelBorderBrush}" 
+                BorderThickness="0,1,0,0">
+            <ItemsControl ItemsSource="{Binding NewsTickerVM.Items}" VerticalAlignment="Center" Margin="16,0">
+                <ItemsControl.ItemsPanel>
+                    <ItemsPanelTemplate>
+                        <StackPanel Orientation="Horizontal" Spacing="32"/>
+                    </ItemsPanelTemplate>
+                </ItemsControl.ItemsPanel>
+                <ItemsControl.ItemTemplate>
+                    <DataTemplate>
+                        <StackPanel Orientation="Horizontal" Spacing="8">
+                            <TextBlock Text="{Binding Category}" FontSize="10" FontWeight="Bold" Foreground="{StaticResource AccentPurpleBrush}"/>
+                            <TextBlock Text="{Binding Text}" FontSize="11" Foreground="{StaticResource TextPrimaryBrush}"/>
+                        </StackPanel>
+                    </DataTemplate>
+                </ItemsControl.ItemTemplate>
+            </ItemsControl>
+        </Border>
+
+        <!-- ZONE 5: RIGHT COMMAND PANEL -->
+        <Border DockPanel.Dock="Right" Width="300" 
+                Background="{StaticResource SurfaceBrush}" 
+                BorderBrush="{StaticResource PanelBorderBrush}" 
+                BorderThickness="1,0,0,0">
+            <ScrollViewer>
+                <StackPanel Spacing="16" Margin="12">
+                    
+                    <!-- Execution Engine -->
+                    <Border Background="{StaticResource Surface2Brush}" CornerRadius="{StaticResource PanelCornerRadius}" BorderBrush="{StaticResource PanelBorderBrush}" BorderThickness="1" Padding="16">
+                        <StackPanel Spacing="16" DataContext="{Binding ExecutionVM}">
+                            <TextBlock Text="EXECUTION ENGINE" FontSize="11" FontWeight="Bold" Foreground="{StaticResource TextMutedBrush}"/>
+                            
+                            <Grid ColumnDefinitions="*, Auto">
+                                <TextBlock Text="{Binding Symbol}" FontSize="20" FontWeight="Black" Foreground="{StaticResource TextPrimaryBrush}"/>
+                                <StackPanel Grid.Column="1" HorizontalAlignment="Right">
+                                    <TextBlock Text="{Binding Ltp}" FontSize="18" FontWeight="Bold" Foreground="{StaticResource PriceUpBrush}" HorizontalAlignment="Right"/>
+                                    <TextBlock Text="{Binding Change}" FontSize="11" Foreground="{StaticResource PriceUpBrush}" HorizontalAlignment="Right"/>
+                                </StackPanel>
+                            </Grid>
+
+                            <!-- Order Type Pills -->
+                            <StackPanel Orientation="Horizontal" Spacing="8">
+                                <RadioButton Classes="OrderTypePill" Content="MKT" IsChecked="True"/>
+                                <RadioButton Classes="OrderTypePill" Content="LMT"/>
+                                <RadioButton Classes="OrderTypePill" Content="SL"/>
+                                <RadioButton Classes="OrderTypePill" Content="SL-M"/>
+                            </StackPanel>
+
+                            <!-- Inputs -->
+                            <Grid RowDefinitions="Auto,Auto" ColumnDefinitions="*,*" Margin="0,8,0,0">
+                                <TextBlock Grid.Row="0" Grid.Column="0" Text="QTY" FontSize="10" Foreground="{StaticResource TextMutedBrush}"/>
+                                <TextBox Grid.Row="1" Grid.Column="0" Text="{Binding Qty}" Margin="0,0,8,0"/>
+                                
+                                <TextBlock Grid.Row="0" Grid.Column="1" Text="PRICE" FontSize="10" Foreground="{StaticResource TextMutedBrush}"/>
+                                <TextBox Grid.Row="1" Grid.Column="1" Text="0.00"/>
+                            </Grid>
+
+                            <!-- Action Buttons -->
+                            <Grid ColumnDefinitions="*,*">
+                                <Button Content="BUY" Background="#1A22C55E" Foreground="{StaticResource PriceUpBrush}" BorderBrush="{StaticResource PriceUpBrush}" BorderThickness="1" HorizontalAlignment="Stretch" HorizontalContentAlignment="Center" Margin="0,0,4,0"/>
+                                <Button Grid.Column="1" Content="SELL" Background="#1AEF4444" Foreground="{StaticResource PriceDownBrush}" BorderBrush="{StaticResource PriceDownBrush}" BorderThickness="1" HorizontalAlignment="Stretch" HorizontalContentAlignment="Center" Margin="4,0,0,0"/>
+                            </Grid>
+                        </StackPanel>
+                    </Border>
+
+                    <!-- Open Positions -->
+                    <Border Background="{StaticResource Surface2Brush}" CornerRadius="{StaticResource PanelCornerRadius}" BorderBrush="{StaticResource PanelBorderBrush}" BorderThickness="1" Padding="12">
+                        <StackPanel Spacing="12" DataContext="{Binding PositionsVM}">
+                            <Grid ColumnDefinitions="*, Auto">
+                                <TextBlock Text="OPEN POSITIONS" FontSize="11" FontWeight="Bold" Foreground="{StaticResource TextMutedBrush}"/>
+                                <TextBlock Grid.Column="1" Text="{Binding TotalPnL}" FontSize="12" FontWeight="Bold" Foreground="{StaticResource PriceUpBrush}"/>
+                            </Grid>
+                            
+                            <ItemsControl ItemsSource="{Binding OpenPositions}">
+                                <ItemsControl.ItemTemplate>
+                                    <DataTemplate>
+                                        <Grid ColumnDefinitions="*, Auto, Auto" Margin="0,0,0,8">
+                                            <StackPanel>
+                                                <StackPanel Orientation="Horizontal" Spacing="4">
+                                                    <TextBlock Text="{Binding Symbol}" FontSize="13" FontWeight="SemiBold" Foreground="{StaticResource TextPrimaryBrush}"/>
+                                                    <TextBlock Text="{Binding Type}" FontSize="10" FontWeight="Bold" Foreground="{StaticResource AccentAmberBrush}"/>
+                                                </StackPanel>
+                                                <TextBlock Text="{Binding Entry, StringFormat='{}Avg {0}'}" FontSize="10" Foreground="{StaticResource TextMutedBrush}"/>
+                                            </StackPanel>
+                                            <TextBlock Grid.Column="1" Text="{Binding Ltp}" FontSize="13" FontWeight="Medium" Foreground="{StaticResource TextPrimaryBrush}" Margin="8,0"/>
+                                            <StackPanel Grid.Column="2" HorizontalAlignment="Right">
+                                                <TextBlock Text="{Binding PnlAmount}" FontSize="13" FontWeight="Bold" Foreground="{StaticResource PriceUpBrush}" HorizontalAlignment="Right"/>
+                                                <TextBlock Text="{Binding PnlPct}" FontSize="10" Foreground="{StaticResource PriceUpBrush}" HorizontalAlignment="Right"/>
+                                            </StackPanel>
+                                        </Grid>
+                                    </DataTemplate>
+                                </ItemsControl.ItemTemplate>
+                            </ItemsControl>
+                        </StackPanel>
+                    </Border>
+                    
+                    <!-- Psychology Engine / Habits -->
+                    <Border Background="{StaticResource Surface2Brush}" CornerRadius="{StaticResource PanelCornerRadius}" BorderBrush="{StaticResource PanelBorderBrush}" BorderThickness="1" Padding="12">
+                        <StackPanel Spacing="12" DataContext="{Binding PsychologyVM}">
+                            <Grid ColumnDefinitions="*, Auto">
+                                <TextBlock Text="PSYCHOLOGY" FontSize="11" FontWeight="Bold" Foreground="{StaticResource TextMutedBrush}"/>
+                                <TextBlock Grid.Column="1" Text="{Binding StreakDays}" FontSize="11" Foreground="{StaticResource AccentAmberBrush}"/>
+                            </Grid>
+                            <ItemsControl ItemsSource="{Binding Habits}">
+                                <ItemsControl.ItemTemplate>
+                                    <DataTemplate>
+                                        <CheckBox Content="{Binding Text}" IsChecked="{Binding IsChecked}" Foreground="{StaticResource TextPrimaryBrush}" FontSize="12" Margin="0,0,0,4"/>
+                                    </DataTemplate>
+                                </ItemsControl.ItemTemplate>
+                            </ItemsControl>
+                        </StackPanel>
+                    </Border>
+                </StackPanel>
+            </ScrollViewer>
+        </Border>
+
+        <!-- ZONE 3: CENTER CHART -->
+        <Border Background="{StaticResource BackgroundBrush}" Margin="16" DataContext="{Binding ChartVM}">
+            <Grid RowDefinitions="Auto, *">
                 
-            </TabControl>
-        </DockPanel>
-    </Panel>
+                <!-- Chart Toolbar -->
+                <Grid ColumnDefinitions="Auto, *, Auto" Margin="0,0,16,16">
+                    <StackPanel Orientation="Horizontal" Spacing="12">
+                        <TextBlock Text="{Binding SelectedSymbol}" FontSize="24" FontWeight="Black" Foreground="{StaticResource TextPrimaryBrush}" VerticalAlignment="Center"/>
+                        <TextBlock Text="+124.50 (0.42%)" FontSize="14" FontWeight="SemiBold" Foreground="{StaticResource PriceUpBrush}" VerticalAlignment="Center"/>
+                    </StackPanel>
+                    
+                    <StackPanel Grid.Column="1" Orientation="Horizontal" HorizontalAlignment="Center" Spacing="4">
+                        <RadioButton Classes="TimeframePill" Content="1m"/>
+                        <RadioButton Classes="TimeframePill" Content="5m" IsChecked="True"/>
+                        <RadioButton Classes="TimeframePill" Content="15m"/>
+                        <RadioButton Classes="TimeframePill" Content="1h"/>
+                        <RadioButton Classes="TimeframePill" Content="D"/>
+                    </StackPanel>
+                    
+                    <StackPanel Grid.Column="2" Orientation="Horizontal" Spacing="8">
+                        <Button Classes="Flat" Content="Indicators"/>
+                        <Button Classes="Flat" Content="Ghost Mode"/>
+                    </StackPanel>
+                </Grid>
+
+                <!-- LiveCharts2 Canvas -->
+                <lvc:CartesianChart Grid.Row="1" Series="{Binding Series}" AnimationsSpeed="00:00:00.150"/>
+            </Grid>
+        </Border>
+    </DockPanel>
 </Window>
