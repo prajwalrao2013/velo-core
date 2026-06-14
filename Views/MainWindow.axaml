@@ -352,6 +352,7 @@
                                 </StackPanel>
                                 
                                 <StackPanel Grid.Column="2" Orientation="Horizontal" Spacing="8">
+                                    <ToggleButton Classes="GhostToggle" Content="Draw Trendline" IsChecked="{Binding IsDrawingModeOn}"/>
                                     <Button Classes="Flat" Content="Indicators"/>
                                     <ToggleButton Classes="GhostToggle" Content="Ghost Mode" IsChecked="{Binding GhostModeOn}"/>
                                 </StackPanel>
@@ -359,7 +360,10 @@
 
                             <!-- LiveCharts2 Canvas Main -->
                             <Grid Grid.Row="1">
-                                <lvc:CartesianChart Series="{Binding Series}" XAxes="{Binding XAxes}" YAxes="{Binding YAxes}" AnimationsSpeed="00:00:00.050"/>
+                                <lvc:CartesianChart Series="{Binding Series}" XAxes="{Binding XAxes}" YAxes="{Binding YAxes}" AnimationsSpeed="00:00:00.050"
+                                                    PointerPressed="Chart_PointerPressed"
+                                                    PointerMoved="Chart_PointerMoved"
+                                                    PointerReleased="Chart_PointerReleased"/>
 
                                 <!-- Phase 4: Floating Execution Buttons -->
                                 <Border HorizontalAlignment="Left" VerticalAlignment="Top" Margin="16" Background="{StaticResource Surface2Brush}" CornerRadius="8" BorderBrush="{StaticResource PanelBorderBrush}" BorderThickness="1" Padding="8">

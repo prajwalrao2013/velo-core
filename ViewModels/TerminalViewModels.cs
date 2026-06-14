@@ -152,11 +152,43 @@ public partial class ChartViewModel : ObservableObject, IRecipient<TickDataMessa
     [ObservableProperty] private string _selectedSymbol = "NIFTY50";
     [ObservableProperty] private string _selectedTimeframe = "5m";
     [ObservableProperty] private bool _ghostModeOn = false;
+    [ObservableProperty] private bool _isDrawingModeOn = false;
     [ObservableProperty] private double _currentBid;
     [ObservableProperty] private double _currentAsk;
 
+    private LineSeries<ObservablePoint> _currentDrawingSeries;
+
     private ObservableCollection<FinancialPoint> _ghostValues = new();
     private bool _isSyncing = false;
+
+    public void StartDrawing(double xData, double yData)
+    {
+        if (!IsDrawingModeOn) return;
+        
+        _currentDrawingSeries = new LineSeries<ObservablePoint>
+        {
+            Values = new ObservableCollection<ObservablePoint> { new ObservablePoint(xData, yData), new ObservablePoint(xData, yData) },
+            Fill = null,
+            GeometrySize = 0,
+            Stroke = new SolidColorPaint(new SKColor(34, 197, 94), 2), // Green trendline
+            IsHoverable = false
+        };
+        Series.Add(_currentDrawingSeries);
+    }
+    
+    public void UpdateDrawing(double xData, double yData)
+    {
+        if (_currentDrawingSeries?.Values == null) return;
+        var vals = (ObservableCollection<ObservablePoint>)_currentDrawingSeries.Values;
+        vals[1].X = xData;
+        vals[1].Y = yData;
+    }
+    
+    public void EndDrawing()
+    {
+        _currentDrawingSeries = null;
+        IsDrawingModeOn = false; // Turn off mode after 1 drawing
+    }
 
     private static readonly List<(FinancialPoint Candle, double Volume)> _baselineData = GenerateBaselineData();
 
