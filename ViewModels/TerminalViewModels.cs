@@ -152,6 +152,8 @@ public partial class ChartViewModel : ObservableObject, IRecipient<TickDataMessa
     [ObservableProperty] private string _selectedSymbol = "NIFTY50";
     [ObservableProperty] private string _selectedTimeframe = "5m";
     [ObservableProperty] private bool _ghostModeOn = false;
+    [ObservableProperty] private double _currentBid;
+    [ObservableProperty] private double _currentAsk;
 
     private ObservableCollection<FinancialPoint> _ghostValues = new();
     private bool _isSyncing = false;
@@ -361,6 +363,9 @@ public partial class ChartViewModel : ObservableObject, IRecipient<TickDataMessa
         var tick = message.Value;
         if (tick.Symbol == SelectedSymbol)
         {
+            CurrentBid = tick.Bid;
+            CurrentAsk = tick.Ask;
+
             Dispatcher.UIThread.InvokeAsync(() => {
                 var coll = Series[0].Values as ObservableCollection<FinancialPoint>;
                 if (coll == null || coll.Count == 0) return;

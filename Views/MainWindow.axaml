@@ -358,7 +358,33 @@
                             </Grid>
 
                             <!-- LiveCharts2 Canvas Main -->
-                            <lvc:CartesianChart Grid.Row="1" Series="{Binding Series}" XAxes="{Binding XAxes}" YAxes="{Binding YAxes}" AnimationsSpeed="00:00:00.050"/>
+                            <Grid Grid.Row="1">
+                                <lvc:CartesianChart Series="{Binding Series}" XAxes="{Binding XAxes}" YAxes="{Binding YAxes}" AnimationsSpeed="00:00:00.050"/>
+
+                                <!-- Phase 4: Floating Execution Buttons -->
+                                <Border HorizontalAlignment="Left" VerticalAlignment="Top" Margin="16" Background="{StaticResource Surface2Brush}" CornerRadius="8" BorderBrush="{StaticResource PanelBorderBrush}" BorderThickness="1" Padding="8">
+                                    <StackPanel Orientation="Horizontal" Spacing="12" VerticalAlignment="Center">
+                                        <Button Background="#1AEF4444" BorderBrush="{StaticResource PriceDownBrush}" BorderThickness="1" CornerRadius="4" Padding="12,6">
+                                            <StackPanel>
+                                                <TextBlock Text="SELL" FontSize="10" FontWeight="Bold" Foreground="{StaticResource PriceDownBrush}" HorizontalAlignment="Center"/>
+                                                <TextBlock Text="{Binding CurrentBid, StringFormat='{}{0:N2}'}" FontSize="12" FontWeight="Black" Foreground="{StaticResource PriceDownBrush}" HorizontalAlignment="Center"/>
+                                            </StackPanel>
+                                        </Button>
+
+                                        <!-- Spread info indicator -->
+                                        <Border Background="{StaticResource Surface3Brush}" CornerRadius="4" Padding="6,2">
+                                            <TextBlock Text="SPREAD" FontSize="8" FontWeight="SemiBold" Foreground="{StaticResource TextMutedBrush}" VerticalAlignment="Center" HorizontalAlignment="Center"/>
+                                        </Border>
+
+                                        <Button Background="#1A22C55E" BorderBrush="{StaticResource PriceUpBrush}" BorderThickness="1" CornerRadius="4" Padding="12,6">
+                                            <StackPanel>
+                                                <TextBlock Text="BUY" FontSize="10" FontWeight="Bold" Foreground="{StaticResource PriceUpBrush}" HorizontalAlignment="Center"/>
+                                                <TextBlock Text="{Binding CurrentAsk, StringFormat='{}{0:N2}'}" FontSize="12" FontWeight="Black" Foreground="{StaticResource PriceUpBrush}" HorizontalAlignment="Center"/>
+                                            </StackPanel>
+                                        </Button>
+                                    </StackPanel>
+                                </Border>
+                            </Grid>
                             
                             <!-- LiveCharts2 Canvas Volume -->
                             <lvc:CartesianChart Grid.Row="2" Series="{Binding VolumeSeries}" XAxes="{Binding VolumeXAxes}" YAxes="{Binding VolumeYAxes}" AnimationsSpeed="00:00:00.050" TooltipPosition="Hidden"/>
