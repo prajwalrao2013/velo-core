@@ -7,7 +7,7 @@ using VeloTerminal.Models;
 
 namespace VeloTerminal.Services;
 
-public class MarketSimulatorService : IMockMarketSimulator
+public class MarketSimulatorService : IMarketDataClient
 {
     private double _currentPrice;
     private double _volatilityMultiplier = 1.0;
@@ -52,8 +52,4 @@ public class MarketSimulatorService : IMockMarketSimulator
         }, cancellationToken);
     }
 
-    public void SetVolatilityMultiplier(double multiplier)
-    {
-        lock (_volLock) _volatilityMultiplier = multiplier;
-    }
 }

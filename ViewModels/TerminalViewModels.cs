@@ -20,10 +20,7 @@ using VeloTerminal.Services;
 namespace VeloTerminal.ViewModels;
 
 // MESSAGES
-public class TradeExecutedMessage : ValueChangedMessage<TradeOrder>
-{
-    public TradeExecutedMessage(TradeOrder value) : base(value) {}
-}
+
 
 public partial class MainViewModel : ObservableObject
 {

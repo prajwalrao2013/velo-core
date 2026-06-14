@@ -11,7 +11,4 @@ public interface IMarketDataClient
     void StartStreaming(CancellationToken cancellationToken);
 }
 
-public interface IMockMarketSimulator : IMarketDataClient
-{
-    void SetVolatilityMultiplier(double multiplier);
-}
+

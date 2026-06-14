@@ -1,6 +1,17 @@
 using System;
+using CommunityToolkit.Mvvm.Messaging.Messages;
 
 namespace VeloTerminal.Models;
+
+public class TickDataMessage : ValueChangedMessage<TickData>
+{
+    public TickDataMessage(TickData value) : base(value) {}
+}
+
+public class TradeExecutedMessage : ValueChangedMessage<TradeOrder>
+{
+    public TradeExecutedMessage(TradeOrder value) : base(value) {}
+}
 
 public record TickData(string Symbol, double LastPrice, double Bid, double Ask, DateTime Timestamp);
 
