@@ -156,7 +156,7 @@ public partial class ChartViewModel : ObservableObject, IRecipient<TickDataMessa
     [ObservableProperty] private double _currentBid;
     [ObservableProperty] private double _currentAsk;
 
-    private LineSeries<ObservablePoint> _currentDrawingSeries;
+    private LineSeries<ObservablePoint>? _currentDrawingSeries;
 
     private ObservableCollection<FinancialPoint> _ghostValues = new();
     private bool _isSyncing = false;
@@ -190,6 +190,8 @@ public partial class ChartViewModel : ObservableObject, IRecipient<TickDataMessa
         IsDrawingModeOn = false; // Turn off mode after 1 drawing
     }
 
+    public static double LastBaselinePrice => _baselineData.Last().Candle.Close.GetValueOrDefault(0);
+
     private static readonly List<(FinancialPoint Candle, double Volume)> _baselineData = GenerateBaselineData();
 
     private static List<(FinancialPoint Candle, double Volume)> GenerateBaselineData()
@@ -197,8 +199,8 @@ public partial class ChartViewModel : ObservableObject, IRecipient<TickDataMessa
         var data = new List<(FinancialPoint, double)>();
         double p = 22000;
         var r = new Random(42);
-        // Generate 1-minute data for a few days
-        DateTime startTime = DateTime.Today.AddDays(-10);
+        DateTime endTime = DateTime.Now;
+        DateTime startTime = endTime.AddMinutes(-10000);
         for (int i = 0; i < 10000; i++)
         {
             double open = p;

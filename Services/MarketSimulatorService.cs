@@ -9,10 +9,16 @@ namespace VeloTerminal.Services;
 
 public class MarketSimulatorService : IMockMarketSimulator
 {
-    private double _currentPrice = 22000.50; // Starting NIFTY50 mock price
+    private double _currentPrice;
     private double _volatilityMultiplier = 1.0;
     private readonly object _volLock = new();
     private readonly Random _random = new();
+
+    public MarketSimulatorService()
+    {
+        // Align simulator to exactly where the historical data left off
+        _currentPrice = VeloTerminal.ViewModels.ChartViewModel.LastBaselinePrice;
+    }
 
     public void StartStreaming(CancellationToken cancellationToken)
     {
